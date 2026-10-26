@@ -59,6 +59,26 @@
   function sliceHours(hourly, key, start, count) {
     return (hourly[key] || []).slice(start, start + count).map(Number).filter(Number.isFinite);
   }
+  function localHourMs(value) {
+    return new Date(value + ":00+05:30").getTime();
+  }
+  function sumPast24Hours(hourly, currentTime) {
+    const times = hourly.time || [];
+    const values = hourly.precipitation || [];
+    const endMs = localHourMs(currentTime);
+    const startMs = endMs - 24 * 60 * 60 * 1000;
+    let total = 0, found = 0;
+    times.forEach((time, i) => {
+      const t = localHourMs(time);
+      // Open-Meteo hourly precipitation is the preceding-hour accumulation
+      // associated with each timestamp; include the 24 completed hours only.
+      if (t > startMs && t <= endMs && Number.isFinite(Number(values[i]))) {
+        total += Number(values[i]);
+        found++;
+      }
+    });
+    return { total, found };
+  }
   function sumHours(hourly, key, start, count) {
     return sliceHours(hourly, key, start, count).reduce((a, n) => a + n, 0);
   }
@@ -66,9 +86,10 @@
     const vals = sliceHours(hourly, key, start, count);
     return vals.length ? Math.max(...vals) : NaN;
   }
-  function renderForecast(data) {
+  function renderForecast(data, today) {
     const d = data.daily;
-    $("forecast-grid").innerHTML = d.time.map((day, i) => {
+    const indices = d.time.map((day, i) => ({ day, i })).filter(item => item.day >= today).slice(0, 7);
+    $("forecast-grid").innerHTML = indices.map(({ day, i }) => {
       const [icon, desc] = wx(d.weather_code[i]);
       return `<article class="panel forecast-card">
         <div class="forecast-day">${i === 0 ? "Today" : dateLabel(day)}</div>
@@ -79,23 +100,26 @@
       </article>`;
     }).join("");
   }
-  function renderRain(data, start) {
+  function renderRain(data, start, past24, today) {
     const d = data.daily, h = data.hourly;
     const next24 = sumHours(h, "precipitation", start, 24);
-    const next7 = d.precipitation_sum.slice(0, 7).reduce((a, n) => a + num(n), 0);
+    $("rain-past-24").textContent = past24.found >= 18 ? fmt(past24.total, 1) : "—";
+    const days = d.time.map((day, i) => ({ day, i })).filter(item => item.day >= today).slice(0, 7);
+    const next7 = days.reduce((a, item) => a + num(d.precipitation_sum[item.i]), 0);
     const maxChance = maxHours(h, "precipitation_probability", start, 24);
     $("rain-24").textContent = fmt(next24, 1);
     $("rain-7").textContent = fmt(next7, 1);
     $("rain-chance").textContent = fmt(maxChance, 0);
-    const max = Math.max(1, ...d.precipitation_sum.slice(0,7).map(Number));
-    $("rain-chart").innerHTML = d.time.slice(0,7).map((day,i) => {
+    const max = Math.max(1, ...days.map(item => Number(d.precipitation_sum[item.i])));
+    $("rain-chart").innerHTML = days.map(({ day, i }) => {
       const mm = num(d.precipitation_sum[i]);
       const height = Math.max(mm > 0 ? 4 : 2, (mm / max) * 88);
       return `<div class="rain-day"><span class="rain-value">${fmt(mm,1)}</span><div class="rain-bar-wrap"><div class="rain-bar" style="height:${height}px"></div></div><span>${dateLabel(day)}</span></div>`;
     }).join("");
   }
-  function renderAdvisories(current, data, start) {
+  function renderAdvisories(current, data, start, past24) {
     const h = data.hourly, d = data.daily;
+    const recentRain = past24.found >= 18 ? past24.total : NaN;
     const rain6 = sumHours(h, "precipitation", start, 6);
     const rain24 = sumHours(h, "precipitation", start, 24);
     const rainChance6 = maxHours(h, "precipitation_probability", start, 6);
@@ -119,12 +143,15 @@
         `The model estimates ${fmt(rain24,1)} mm over the next 24 hours and a maximum hourly rain probability of ${fmt(rainChance24,0)}%. This is not a guarantee of dry weather. Check the latest IMD warning and local field conditions before operations.`]);
     }
 
-    if (rain24 >= 5 || rainChance24 >= 60) {
+    if ((Number.isFinite(recentRain) && recentRain >= 5) || rain24 >= 5 || rainChance24 >= 60) {
+      const recentText = Number.isFinite(recentRain)
+        ? ` The model's previous-24-hour estimate is ${fmt(recentRain,1)} mm; this is not a rain-gauge observation.`
+        : " Recent-rain model data are incomplete.";
       items.push(["💧","Irrigation · reassess before watering",
-        `Rain may contribute about ${fmt(rain24,1)} mm in the next 24 hours. Check soil moisture, crop stage and field water depth before irrigating; do not irrigate automatically from a forecast alone.`]);
+        `Rain may affect the field water balance.${recentText} The next-24-hour forecast is ${fmt(rain24,1)} mm. Check actual soil moisture, crop stage, field water depth and drainage before irrigating; do not irrigate automatically from a forecast alone.`]);
     } else {
       items.push(["💧","Irrigation · check field moisture",
-        `No strong rainfall signal is indicated for the next 24 hours (${fmt(rain24,1)} mm model estimate). Decide irrigation from crop stage, soil moisture and field water level—not from weather data alone.`]);
+        `The next-24-hour model forecast is ${fmt(rain24,1)} mm.` + (Number.isFinite(recentRain) ? ` Previous-24-hour model estimate: ${fmt(recentRain,1)} mm (not a measured observation).` : " Previous-24-hour model data are incomplete.") + ` Decide irrigation from observed soil moisture, crop stage and field water level—not from weather data alone.`]);
     }
 
     const windRisk = (Number.isFinite(gustMax6) && gustMax6 >= 25) || (Number.isFinite(windMax6) && windMax6 >= 20);
@@ -167,6 +194,7 @@
     try {
       const params = new URLSearchParams({
         latitude: LAT, longitude: LON, timezone: TZ,
+        past_days: "2",
         current: "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m",
         hourly: "temperature_2m,precipitation,precipitation_probability,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,uv_index",
         daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max",
@@ -174,7 +202,14 @@
       });
       const data = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params}`);
       if (!data.current || !data.daily || !data.hourly) throw new Error("Weather response was incomplete.");
-      const c = data.current, start = hourStartIndex(data.hourly, c);
+      const c = data.current;
+      const currentIndex = hourStartIndex(data.hourly, c);
+      // Hourly precipitation is accumulated over the preceding hour. Start the
+      // future window one timestamp after current.time to avoid counting that
+      // already elapsed hour as upcoming rainfall.
+      const start = Math.min(currentIndex + 1, Math.max(0, data.hourly.time.length - 1));
+      const past24 = sumPast24Hours(data.hourly, c.time);
+      const today = c.time.slice(0, 10);
       const [icon, description] = wx(c.weather_code);
       $("weather-icon").textContent = icon;
       $("weather-description").textContent = description;
@@ -187,10 +222,10 @@
       $("pressure").textContent = fmt(c.pressure_msl,0);
       $("uv").textContent = fmt(data.daily.uv_index_max[0],1);
       $("updated-at").textContent = `Model timestamp: ${dateTime(c.time)} · Page refreshed: ${dateTime(new Date().toISOString())}`;
-      $("model-note").textContent = "Open-Meteo model-based estimate for the area; not a campus sensor reading.";
-      renderForecast(data);
-      renderRain(data, start);
-      renderAdvisories(c, data, start);
+      $("model-note").textContent = "Open-Meteo model-based estimates for the area; not campus sensor readings. Past rainfall is not verified observation data.";
+      renderForecast(data, today);
+      renderRain(data, start, past24, today);
+      renderAdvisories(c, data, start, past24);
       setStatus("Weather data loaded", true);
       setImdStatus();
     } catch (error) {
