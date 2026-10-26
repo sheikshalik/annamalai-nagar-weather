@@ -8,6 +8,7 @@
   <title>Department of Agronomy | Annamalai Nagar Weather</title>
 
   <link rel="stylesheet" href="./styles.css">
+
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🌦️%3C/text%3E%3C/svg%3E">
 
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -146,12 +147,12 @@
       <div id="rain-chart" class="rain-chart" aria-label="Daily rainfall chart"></div>
 
       <p class="tiny muted">
-        The last-24-hour rainfall value is a weather-model estimate, not a
+        The last-24-hour rainfall value is an Open-Meteo model estimate, not a
         measurement from an on-campus rain gauge. It may differ from rainfall
         observed locally. The seven-day figure and daily bars are forecast
         estimates; today's bar may include hours that have already passed.
-        The rain-chance value is the highest hourly probability forecast within
-        the next 24 hours, not the probability that it will rain all day.
+        The rain-chance value is the maximum hourly probability forecast during
+        the upcoming 24 hours, not the probability that it will rain all day.
         For observed rainfall, cross-check the nearest reporting station through
         official IMD or Tamil Nadu TN-SMART reports.
       </p>
@@ -183,6 +184,7 @@
     </section>
 
     <section class="panel source-panel">
+
       <div class="source-badge">IMD</div>
 
       <div class="source-copy">
@@ -191,7 +193,7 @@
         <p class="muted">
           Check official forecasts, district warnings and rainfall bulletins.
           This dashboard uses Open-Meteo for numerical weather estimates and
-          provides links to IMD for official forecasts and warnings. A verified,
+          links to IMD for official forecasts and warnings. A verified,
           authorised IMD station feed for Annamalai Nagar has not yet been connected.
         </p>
 
@@ -218,43 +220,42 @@
         </div>
 
         <p id="imd-status" class="tiny muted">
-          Official feed: not yet checked.
+          Live IMD warning data is not integrated in this version.
         </p>
       </div>
+
     </section>
 
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">SHARE THIS DASHBOARD</p>
-        <h2>Department QR code</h2>
-      </div>
-    </section>
+    <section class="share-strip" aria-label="Share this dashboard">
 
-    <section class="panel qr-panel">
-      <div>
-        <h3>One QR code, reusable over time</h3>
+      <div class="share-copy">
+        <p class="eyebrow">SHARE DASHBOARD</p>
+        <h2>Share the weather dashboard</h2>
 
         <p class="muted">
-          After publishing this site, create a QR code for its permanent
-          GitHub Pages address. Print it on the department notice board.
-          Keep the repository name and published URL unchanged so the same
-          QR code continues to work when the website is updated.
+          Copy the website address or scan the QR code to open the dashboard.
         </p>
 
-        <button id="make-qr" class="button" type="button">
-          Generate QR code for this page
-        </button>
+        <a class="share-url"
+           href="https://sheikshalik.github.io/annamalai-nagar-weather/"
+           target="_blank"
+           rel="noopener noreferrer">
+          https://sheikshalik.github.io/annamalai-nagar-weather/
+        </a>
 
-        <button id="download-qr" class="button secondary" type="button" disabled>
-          Download QR PNG
-        </button>
-
-        <p id="qr-message" class="tiny muted">
-          The QR code is generated from this page's current address.
-        </p>
+        <div class="share-actions">
+          <button id="download-qr" class="button secondary" type="button" disabled>
+            Download QR PNG
+          </button>
+          <span id="qr-message" class="tiny muted" role="status">
+            Preparing QR code…
+          </span>
+        </div>
       </div>
 
-      <div id="qrcode" class="qr-output" aria-label="QR code for this dashboard"></div>
+      <div id="qrcode" class="qr-output compact-qr"
+           aria-label="QR code linking to the weather dashboard"></div>
+
     </section>
 
     <footer class="site-footer">
