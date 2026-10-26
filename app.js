@@ -102,12 +102,14 @@
   }
   function renderRain(data, start, past24, today) {
     const d = data.daily, h = data.hourly;
-    const next24 = sumHours(h, "precipitation", start, 24);
-    $("rain-past-24").textContent = past24.found >= 18 ? fmt(past24.total, 1) : "—";
+    // Show only the preceding 24-hour rainfall estimate here. The next-24h
+    // rainfall amount is intentionally not shown as a separate metric because
+    // the next-24h maximum hourly rain probability is already displayed.
+    // Require all 24 hourly values so missing data cannot masquerade as low rain.
+    $("rain-past-24").textContent = past24.found >= 24 ? fmt(past24.total, 1) : "—";
     const days = d.time.map((day, i) => ({ day, i })).filter(item => item.day >= today).slice(0, 7);
     const next7 = days.reduce((a, item) => a + num(d.precipitation_sum[item.i]), 0);
     const maxChance = maxHours(h, "precipitation_probability", start, 24);
-    $("rain-24").textContent = fmt(next24, 1);
     $("rain-7").textContent = fmt(next7, 1);
     $("rain-chance").textContent = fmt(maxChance, 0);
     const max = Math.max(1, ...days.map(item => Number(d.precipitation_sum[item.i])));
@@ -119,7 +121,7 @@
   }
   function renderAdvisories(current, data, start, past24) {
     const h = data.hourly, d = data.daily;
-    const recentRain = past24.found >= 18 ? past24.total : NaN;
+    const recentRain = past24.found >= 24 ? past24.total : NaN;
     const rain6 = sumHours(h, "precipitation", start, 6);
     const rain24 = sumHours(h, "precipitation", start, 24);
     const rainChance6 = maxHours(h, "precipitation_probability", start, 6);
