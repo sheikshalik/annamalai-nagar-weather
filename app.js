@@ -1,15 +1,17 @@
 (() => {
   "use strict";
-  // Approximate coordinates for Annamalai Nagar / Chidambaram area.
-  // Forecast is grid/model data, not a measurement from a campus instrument.
-  const LAT = 11.39;
-  const LON = 79.72;
-  const TZ = "Asia/Kolkata";
+  // Approximate coordinates for Annamalai Nagar / Chidambaram.
+  // Values are Open-Meteo model-based estimates, not campus weather-station observations.
+  const LAT = 11.39, LON = 79.72, TZ = "Asia/Kolkata";
   const $ = (id) => document.getElementById(id);
   const fmt = (n, digits = 1) => Number.isFinite(Number(n)) ? Number(n).toFixed(digits) : "—";
+  const num = (n) => Number.isFinite(Number(n)) ? Number(n) : 0;
   const dateTime = (value) => {
     if (!value) return "Unavailable";
-    const d = new Date(value);
+    let d;
+    // Open-Meteo returns local timestamps without an offset when timezone is specified.
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) d = new Date(value + ":00+05:30");
+    else d = new Date(value);
     return Number.isNaN(d.getTime()) ? String(value) : new Intl.DateTimeFormat("en-IN", {
       dateStyle: "medium", timeStyle: "short", timeZone: TZ
     }).format(d) + " IST";
@@ -33,23 +35,37 @@
     return dirs[Math.round(Number(degrees) / 22.5) % 16];
   };
 
-  async function fetchJson(url, timeoutMs = 10000) {
+  async function fetchJson(url, timeoutMs = 12000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
-    } finally {
-      clearTimeout(timer);
-    }
+    } finally { clearTimeout(timer); }
   }
-
   function setStatus(text, ok = true) {
     $("load-status").textContent = text;
     $("load-status").previousElementSibling.style.background = ok ? "#3d9b65" : "#d6a83e";
   }
-
+  function hourStartIndex(hourly, current) {
+    const times = hourly.time || [];
+    let exact = times.indexOf(current.time);
+    if (exact >= 0) return exact;
+    const currentMs = new Date(current.time + ":00+05:30").getTime();
+    const idx = times.findIndex(t => new Date(t + ":00+05:30").getTime() >= currentMs);
+    return idx >= 0 ? idx : 0;
+  }
+  function sliceHours(hourly, key, start, count) {
+    return (hourly[key] || []).slice(start, start + count).map(Number).filter(Number.isFinite);
+  }
+  function sumHours(hourly, key, start, count) {
+    return sliceHours(hourly, key, start, count).reduce((a, n) => a + n, 0);
+  }
+  function maxHours(hourly, key, start, count) {
+    const vals = sliceHours(hourly, key, start, count);
+    return vals.length ? Math.max(...vals) : NaN;
+  }
   function renderForecast(data) {
     const d = data.daily;
     $("forecast-grid").innerHTML = d.time.map((day, i) => {
@@ -63,52 +79,88 @@
       </article>`;
     }).join("");
   }
-
-  function renderRain(data) {
-    const d = data.daily;
-    const next24 = data.hourly.precipitation.slice(0, 24).reduce((a, n) => a + (Number(n) || 0), 0);
-    const next7 = d.precipitation_sum.slice(0, 7).reduce((a, n) => a + (Number(n) || 0), 0);
-    const maxChance = Math.max(0, ...data.hourly.precipitation_probability.slice(0,24).map(Number).filter(Number.isFinite));
+  function renderRain(data, start) {
+    const d = data.daily, h = data.hourly;
+    const next24 = sumHours(h, "precipitation", start, 24);
+    const next7 = d.precipitation_sum.slice(0, 7).reduce((a, n) => a + num(n), 0);
+    const maxChance = maxHours(h, "precipitation_probability", start, 24);
     $("rain-24").textContent = fmt(next24, 1);
     $("rain-7").textContent = fmt(next7, 1);
     $("rain-chance").textContent = fmt(maxChance, 0);
     const max = Math.max(1, ...d.precipitation_sum.slice(0,7).map(Number));
     $("rain-chart").innerHTML = d.time.slice(0,7).map((day,i) => {
-      const mm = Number(d.precipitation_sum[i]) || 0;
+      const mm = num(d.precipitation_sum[i]);
       const height = Math.max(mm > 0 ? 4 : 2, (mm / max) * 88);
       return `<div class="rain-day"><span class="rain-value">${fmt(mm,1)}</span><div class="rain-bar-wrap"><div class="rain-bar" style="height:${height}px"></div></div><span>${dateLabel(day)}</span></div>`;
     }).join("");
   }
-
-  function renderAdvisories(current, daily) {
-    const rain24 = daily.precipitation_sum.slice(0,2).reduce((a,n)=>a+(Number(n)||0),0);
-    const maxRainChance = Math.max(0, ...daily.precipitation_probability_max.slice(0,2).map(Number).filter(Number.isFinite));
-    const maxTemp = Math.max(...daily.temperature_2m_max.slice(0,2).map(Number).filter(Number.isFinite));
-    const wind = Number(current.wind_speed_10m);
+  function renderAdvisories(current, data, start) {
+    const h = data.hourly, d = data.daily;
+    const rain6 = sumHours(h, "precipitation", start, 6);
+    const rain24 = sumHours(h, "precipitation", start, 24);
+    const rainChance6 = maxHours(h, "precipitation_probability", start, 6);
+    const rainChance24 = maxHours(h, "precipitation_probability", start, 24);
+    const windMax6 = maxHours(h, "wind_speed_10m", start, 6);
+    const gustMax6 = maxHours(h, "wind_gusts_10m", start, 6);
+    const tempMax24 = maxHours(h, "temperature_2m", start, 24);
+    const uvMaxToday = Number(d.uv_index_max?.[0]);
+    const [wxIcon, wxText] = wx(current.weather_code);
     const items = [];
-    if (rain24 >= 10 || maxRainChance >= 70) {
-      items.push(["🌧️","Rain likely","Check the latest IMD warning before irrigation, fertilizer application or pesticide spraying. Avoid field operations when rainfall or strong winds may cause runoff or drift."]);
-    } else {
-      items.push(["🌱","Field operations","No strong rain signal in the model’s next 24–48 hours. Confirm soil moisture and the latest local forecast before scheduling irrigation or field operations."]);
-    }
-    if (maxTemp >= 35) {
-      items.push(["☀️","Heat awareness","Forecast maximum temperature is high. Consider crop-stage-appropriate irrigation timing and protect workers from heat; use local agricultural guidance."]);
-    } else {
-      items.push(["💧","Irrigation planning","Use crop stage, soil moisture and field water level to decide irrigation. A weather forecast alone should not determine irrigation timing."]);
-    }
-    if (wind >= 20) {
-      items.push(["💨","Wind caution","Wind speed is elevated in the model. Check label restrictions and local conditions before any spray operation; avoid spraying in unsuitable wind."]);
-    } else {
-      items.push(["🧪","Spray decisions","Before spraying, check the product label, wind gusts, rainfall window and official local advice. Do not spray solely on the basis of this dashboard."]);
-    }
-    items.push(["📣","Official warnings","Check IMD warnings for Cuddalore district and coastal Tamil Nadu, especially during heavy rain, thunderstorms or cyclone conditions."]);
-    $("advisories").innerHTML = items.map(([icon,title,body]) => `<article class="panel advisory"><span class="advisory-icon">${icon}</span><div><h3>${title}</h3><p>${body}</p></div></article>`).join("");
-  }
 
+    // Rain decision uses the upcoming hourly forecast window, not the first hours of the day.
+    if (rain6 >= 5 || rainChance6 >= 70) {
+      items.push(["🌧️","Rain watch · next 6 hours",
+        `Current model condition: ${wxText}. Forecast rainfall over the next 6 hours is about ${fmt(rain6,1)} mm; maximum hourly rain probability is ${fmt(rainChance6,0)}%. Check IMD alerts and field drainage. Avoid fertilizer or pesticide application if rain/runoff risk is present.`]);
+    } else if (rainChance24 >= 50 || rain24 >= 2) {
+      items.push(["🌦️","Possible rain · next 24 hours",
+        `The model estimates ${fmt(rain24,1)} mm over the next 24 hours, with a maximum hourly rain probability of ${fmt(rainChance24,0)}%. Recheck the forecast before field work; protect fertilizer and avoid spraying close to expected rainfall.`]);
+    } else {
+      items.push(["🌤️","No strong rain signal",
+        `The model estimates ${fmt(rain24,1)} mm over the next 24 hours and a maximum hourly rain probability of ${fmt(rainChance24,0)}%. This is not a guarantee of dry weather. Check the latest IMD warning and local field conditions before operations.`]);
+    }
+
+    if (rain24 >= 5 || rainChance24 >= 60) {
+      items.push(["💧","Irrigation · reassess before watering",
+        `Rain may contribute about ${fmt(rain24,1)} mm in the next 24 hours. Check soil moisture, crop stage and field water depth before irrigating; do not irrigate automatically from a forecast alone.`]);
+    } else {
+      items.push(["💧","Irrigation · check field moisture",
+        `No strong rainfall signal is indicated for the next 24 hours (${fmt(rain24,1)} mm model estimate). Decide irrigation from crop stage, soil moisture and field water level—not from weather data alone.`]);
+    }
+
+    const windRisk = (Number.isFinite(gustMax6) && gustMax6 >= 25) || (Number.isFinite(windMax6) && windMax6 >= 20);
+    const sprayRainRisk = rainChance6 >= 50 || rain6 >= 1;
+    if (windRisk || sprayRainRisk) {
+      const reasons = [];
+      if (Number.isFinite(windMax6)) reasons.push(`wind up to ${fmt(windMax6,0)} km/h`);
+      if (Number.isFinite(gustMax6)) reasons.push(`gusts up to ${fmt(gustMax6,0)} km/h`);
+      if (sprayRainRisk) reasons.push(`${fmt(rainChance6,0)}% maximum hourly rain probability`);
+      items.push(["🧪","Spraying · caution",
+        `Next 6-hour model outlook: ${reasons.join(", ") || "conditions may change"}. Check the pesticide label, wind at the field, drift risk and rain-free interval. Postpone if conditions exceed label or local advisory limits.`]);
+    } else {
+      items.push(["🧪","Spraying · verify field conditions",
+        `The next 6-hour model shows wind up to ${fmt(windMax6,0)} km/h and gusts up to ${fmt(gustMax6,0)} km/h, with ${fmt(rainChance6,0)}% maximum hourly rain probability. These estimates do not confirm safe spraying; follow the product label and local advice.`]);
+    }
+
+    if (Number.isFinite(tempMax24) && tempMax24 >= 35) {
+      items.push(["☀️","Heat and outdoor work",
+        `Forecast temperature may reach ${fmt(tempMax24,0)}°C in the next 24 hours (today's maximum UV index: ${fmt(uvMaxToday,1)}). Schedule strenuous outdoor work for cooler hours, take water/rest breaks and follow heat-safety guidance. Consider crop stage and local agronomic advice.`]);
+    } else if (Number.isFinite(uvMaxToday) && uvMaxToday >= 8) {
+      items.push(["🕶️","High UV outlook",
+        `Today's forecast maximum UV index is ${fmt(uvMaxToday,1)}. Consider sun protection and cooler work periods for field staff. Forecast UV is not a crop-specific stress diagnosis.`]);
+    } else {
+      items.push([wxIcon,"Field conditions · current outlook",
+        `Current model condition is ${wxText}; forecast maximum temperature in the next 24 hours is ${fmt(tempMax24,0)}°C and today's maximum UV index is ${fmt(uvMaxToday,1)}. Match field operations to crop stage, soil and observed conditions.`]);
+    }
+
+    items.push(["📣","Official IMD warnings · verify now",
+      "This dashboard does not yet ingest live IMD warning records. Open the official IMD regional page and check Cuddalore district / coastal Tamil Nadu warnings before pesticide application, fertilizer application, irrigation or outdoor work."]);
+    $("advisories").innerHTML = items.map(([icon,title,body]) =>
+      `<article class="panel advisory"><span class="advisory-icon">${icon}</span><div><h3>${title}</h3><p>${body}</p></div></article>`
+    ).join("");
+  }
   function setImdStatus() {
-    $("imd-status").textContent = "Official IMD live API data is not connected to this version. Use the official IMD links above for published forecasts and warnings; dashboard numeric values are Open-Meteo model estimates.";
+    $("imd-status").textContent = "Live IMD warning data is not integrated in this version. Official warnings must be checked directly on the IMD website; dashboard numerical values are Open-Meteo model estimates.";
   }
-
   async function loadWeather() {
     $("refresh-btn").disabled = true;
     setStatus("Fetching latest available model data…", true);
@@ -116,13 +168,13 @@
       const params = new URLSearchParams({
         latitude: LAT, longitude: LON, timezone: TZ,
         current: "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m",
-        hourly: "temperature_2m,precipitation,precipitation_probability,relative_humidity_2m",
+        hourly: "temperature_2m,precipitation,precipitation_probability,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,uv_index",
         daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max",
         forecast_days: "7", wind_speed_unit: "kmh", precipitation_unit: "mm", temperature_unit: "celsius"
       });
       const data = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params}`);
       if (!data.current || !data.daily || !data.hourly) throw new Error("Weather response was incomplete.");
-      const c = data.current;
+      const c = data.current, start = hourStartIndex(data.hourly, c);
       const [icon, description] = wx(c.weather_code);
       $("weather-icon").textContent = icon;
       $("weather-description").textContent = description;
@@ -137,8 +189,8 @@
       $("updated-at").textContent = `Model timestamp: ${dateTime(c.time)} · Page refreshed: ${dateTime(new Date().toISOString())}`;
       $("model-note").textContent = "Open-Meteo model-based estimate for the area; not a campus sensor reading.";
       renderForecast(data);
-      renderRain(data);
-      renderAdvisories(c, data.daily);
+      renderRain(data, start);
+      renderAdvisories(c, data, start);
       setStatus("Weather data loaded", true);
       setImdStatus();
     } catch (error) {
@@ -149,12 +201,9 @@
       $("model-note").textContent = "No live values are being shown. Check the official IMD links below.";
       $("forecast-grid").innerHTML = '<article class="panel forecast-card">Forecast temporarily unavailable. Please refresh or check IMD.</article>';
       $("rain-chart").textContent = "Rainfall chart unavailable until weather data load.";
-      $("advisories").innerHTML = '<article class="panel advisory"><span class="advisory-icon">📣</span><div><h3>Check official weather alerts</h3><p>Use the IMD Mausam link below for current warnings. Do not interpret missing data as dry weather.</p></div></article>';
-    } finally {
-      $("refresh-btn").disabled = false;
-    }
+      $("advisories").innerHTML = '<article class="panel advisory"><span class="advisory-icon">📣</span><div><h3>Check official weather alerts</h3><p>Use the official IMD regional page for current warnings. Do not interpret missing data as dry weather.</p></div></article>';
+    } finally { $("refresh-btn").disabled = false; }
   }
-
   function makeQr() {
     const target = window.location.href.split("#")[0];
     if (!target.startsWith("https://") || target.includes("localhost") || target.includes("127.0.0.1")) {
@@ -172,18 +221,15 @@
     $("qr-message").textContent = `QR target: ${target}. Keep this website URL unchanged for the printed QR code to remain valid.`;
   }
   function downloadQr() {
-    const host = $("qrcode");
-    const canvas = host.querySelector("canvas");
-    const img = host.querySelector("img");
+    const host = $("qrcode"), canvas = host.querySelector("canvas"), img = host.querySelector("img");
     const data = canvas ? canvas.toDataURL("image/png") : (img ? img.src : null);
     if (!data) return;
-    const a = document.createElement("a");
-    a.href = data; a.download = "annamalai-nagar-weather-qr.png"; a.click();
+    const a = document.createElement("a"); a.href = data; a.download = "annamalai-nagar-weather-qr.png"; a.click();
   }
   $("refresh-btn").addEventListener("click", loadWeather);
   $("make-qr").addEventListener("click", makeQr);
   $("download-qr").addEventListener("click", downloadQr);
   loadWeather();
-  // Refresh periodically while the page is open; this does not mean the underlying model updates every 15 minutes.
+  // Refreshing the page reloads model data; this timer does not guarantee model updates every 15 minutes.
   setInterval(loadWeather, 15 * 60 * 1000);
 })();
