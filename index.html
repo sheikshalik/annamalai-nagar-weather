@@ -1,55 +1,289 @@
-AU
-ANNAMALAI UNIVERSITY
-Department of Agronomy
-Weather Dashboard · Annamalai Nagar, Chidambaram, Tamil Nadu
-LOCAL WEATHER · AGRICULTURAL USE
-Weather for the field, at a glance.
-Current conditions, a 7-day forecast, rainfall outlook and practical field-operation reminders for Annamalai Nagar.
-Connecting to weather services… Update time will appear here
-RIGHT NOW
-Current weather
-↻ Refresh
-🌤️
-Loading conditions…
-—°C
-Feels like —°C
-Model-based estimate; not a campus sensor reading.
-💧Relative humidity—%
-🌧️Rain in last model hour—mm
-💨Wind speed—km/hDirection —
-🌡️Pressure—hPa
-☀️UV index—Forecast model
-PLAN AHEAD
-7-day forecast
-Daily values are forecast estimates.
-Loading forecast…
-RAIN WATCH
-Rainfall outlook
-Last 24 hours · model estimate— mm
-Next 7 days · forecast total— mm
-Next 24h rain chance (max hourly)—%
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#164e35">
+  <meta name="description" content="Weather dashboard for the Department of Agronomy, Annamalai University, Annamalai Nagar, Chidambaram.">
+  <title>Department of Agronomy | Annamalai Nagar Weather</title>
 
-“Last 24 hours” is an Open-Meteo model estimate, not a measured campus rain-gauge total; it may differ from rainfall you observed locally. The 7-day figure and daily bars are forecast-model totals; today's bar may include hours that have already passed. The rain-chance value is the highest hourly probability forecast within the next 24 hours, not the probability that it will rain all day. For observed rainfall, cross-check the nearest reporting station through official IMD or Tamil Nadu TN-SMART reports.
-AGRONOMY NOTES
-Weather-aware field reminders
-Preparing weather-aware reminders…
-These are general, rule-based reminders—not official IMD advisories or crop-specific prescriptions. Follow current IMD warnings, local extension recommendations, crop stage and field conditions before making decisions.
-OFFICIAL REFERENCE
-IMD information
-IMD
-India Meteorological Department
-Check official forecasts, district warnings and rainfall bulletins. This version uses Open-Meteo for the live numerical dashboard and links to IMD for official forecasts and warnings. A verified, authorised IMD station feed for Annamalai Nagar has not yet been connected.
-IMD realized / station rainfall ↗ IMD rainfall information ↗ Tamil Nadu TN-SMART rainfall report ↗ IMD Mausam website ↗
-Official feed: not yet checked.
-SHARE THIS DASHBOARD
-Department QR code
-One QR code, reusable over time
-After publishing this site, create a QR code for its permanent GitHub Pages address. Print it on the department notice board. Keep the repository name and published URL unchanged so the same QR code continues to work when the website is updated.
-Generate QR code for this page Download QR PNG
-The QR code is generated from this page’s current address.
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🌦️%3C/text%3E%3C/svg%3E">
 
-Department of Agronomy · Annamalai University
-Location: Annamalai Nagar, Chidambaram, Tamil Nadu, India
-Weather data: Open-Meteo model-based estimates; official IMD forecast and warning links.
-Open-Meteo · Hosted with GitHub Pages
-This page is an informational service and is not a substitute for official warnings. Data availability, update frequency and local accuracy may vary.
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="brand-mark" aria-hidden="true">AU</div>
+    <div>
+      <p class="eyebrow">ANNAMALAI UNIVERSITY</p>
+      <h1>Department of Agronomy</h1>
+      <p class="subtitle">Weather Dashboard · Annamalai Nagar, Chidambaram, Tamil Nadu</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="intro panel">
+      <div>
+        <p class="eyebrow green">LOCAL WEATHER · AGRICULTURAL USE</p>
+        <h2>Weather for the field, at a glance.</h2>
+        <p class="muted">
+          Current conditions, a 7-day forecast, rainfall outlook and practical
+          field-operation reminders for Annamalai Nagar.
+        </p>
+      </div>
+
+      <div class="updated-wrap">
+        <span class="status-dot"></span>
+        <span id="load-status" role="status">Connecting to weather services…</span>
+        <small id="updated-at">Update time will appear here</small>
+      </div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">RIGHT NOW</p>
+        <h2>Current weather</h2>
+      </div>
+      <button id="refresh-btn" class="button secondary" type="button">↻ Refresh</button>
+    </section>
+
+    <section class="current-grid" aria-label="Current weather conditions">
+
+      <article class="panel hero-weather">
+        <div class="weather-symbol" id="weather-icon" aria-hidden="true">🌤️</div>
+        <div>
+          <p class="muted no-margin" id="weather-description">Loading conditions…</p>
+          <div class="temperature">
+            <span id="temperature">—</span><span class="degree">°C</span>
+          </div>
+          <p class="muted no-margin">
+            Feels like <strong id="feels-like">—</strong>°C
+          </p>
+          <p class="tiny muted" id="model-note">
+            Model-based estimate; not a campus sensor reading.
+          </p>
+        </div>
+      </article>
+
+      <article class="panel metric">
+        <span class="metric-icon">💧</span>
+        <span class="metric-label">Relative humidity</span>
+        <strong><span id="humidity">—</span><small>%</small></strong>
+      </article>
+
+      <article class="panel metric">
+        <span class="metric-icon">🌧️</span>
+        <span class="metric-label">Rain in last model hour</span>
+        <strong><span id="rain-now">—</span><small>mm</small></strong>
+      </article>
+
+      <article class="panel metric">
+        <span class="metric-icon">💨</span>
+        <span class="metric-label">Wind speed</span>
+        <strong><span id="wind">—</span><small>km/h</small></strong>
+        <span class="tiny muted" id="wind-direction">Direction —</span>
+      </article>
+
+      <article class="panel metric">
+        <span class="metric-icon">🌡️</span>
+        <span class="metric-label">Pressure</span>
+        <strong><span id="pressure">—</span><small>hPa</small></strong>
+      </article>
+
+      <article class="panel metric">
+        <span class="metric-icon">☀️</span>
+        <span class="metric-label">UV index</span>
+        <strong><span id="uv">—</span></strong>
+        <span class="tiny muted">Forecast model</span>
+      </article>
+
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">PLAN AHEAD</p>
+        <h2>7-day forecast</h2>
+      </div>
+      <p class="tiny muted">Daily values are forecast estimates.</p>
+    </section>
+
+    <section id="forecast-grid" class="forecast-grid" aria-live="polite">
+      <article class="panel forecast-card">Loading forecast…</article>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">RAIN WATCH</p>
+        <h2>Rainfall outlook</h2>
+      </div>
+    </section>
+
+    <section class="panel rainfall-panel">
+
+      <div class="rain-summary">
+
+        <div>
+          <span class="metric-label">Last 24 hours · model estimate</span>
+          <strong><span id="rain-past-24">—</span> mm</strong>
+        </div>
+
+        <div>
+          <span class="metric-label">Next 7 days · forecast total</span>
+          <strong><span id="rain-7">—</span> mm</strong>
+        </div>
+
+        <div>
+          <span class="metric-label">Next 24h rain chance (max hourly)</span>
+          <strong><span id="rain-chance">—</span>%</strong>
+        </div>
+
+      </div>
+
+      <div id="rain-chart" class="rain-chart" aria-label="Daily rainfall chart"></div>
+
+      <p class="tiny muted">
+        The last-24-hour rainfall value is a weather-model estimate, not a
+        measurement from an on-campus rain gauge. It may differ from rainfall
+        observed locally. The seven-day figure and daily bars are forecast
+        estimates; today's bar may include hours that have already passed.
+        The rain-chance value is the highest hourly probability forecast within
+        the next 24 hours, not the probability that it will rain all day.
+        For observed rainfall, cross-check the nearest reporting station through
+        official IMD or Tamil Nadu TN-SMART reports.
+      </p>
+
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">AGRONOMY NOTES</p>
+        <h2>Weather-aware field reminders</h2>
+      </div>
+    </section>
+
+    <section id="advisories" class="advisory-grid">
+      <article class="panel advisory">Preparing weather-aware reminders…</article>
+    </section>
+
+    <p class="notice">
+      These are general, rule-based reminders—not official IMD advisories or
+      crop-specific prescriptions. Follow current IMD warnings, local extension
+      recommendations, crop stage and field conditions before making decisions.
+    </p>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">OFFICIAL REFERENCE</p>
+        <h2>IMD information</h2>
+      </div>
+    </section>
+
+    <section class="panel source-panel">
+      <div class="source-badge">IMD</div>
+
+      <div class="source-copy">
+        <h3>India Meteorological Department</h3>
+
+        <p class="muted">
+          Check official forecasts, district warnings and rainfall bulletins.
+          This dashboard uses Open-Meteo for numerical weather estimates and
+          provides links to IMD for official forecasts and warnings. A verified,
+          authorised IMD station feed for Annamalai Nagar has not yet been connected.
+        </p>
+
+        <div class="link-row">
+          <a href="https://mausam.imd.gov.in/responsive/wxRealized.php"
+             target="_blank" rel="noopener noreferrer">
+            IMD realized / station rainfall ↗
+          </a>
+
+          <a href="https://mausam.imd.gov.in/responsive/rainfallinformation_state.php"
+             target="_blank" rel="noopener noreferrer">
+            IMD rainfall information ↗
+          </a>
+
+          <a href="https://beta-tnsmart.rimes.int/index.php/MIS/Rainfall/daily_reports/"
+             target="_blank" rel="noopener noreferrer">
+            Tamil Nadu TN-SMART rainfall report ↗
+          </a>
+
+          <a href="https://mausam.imd.gov.in/"
+             target="_blank" rel="noopener noreferrer">
+            IMD Mausam website ↗
+          </a>
+        </div>
+
+        <p id="imd-status" class="tiny muted">
+          Official feed: not yet checked.
+        </p>
+      </div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">SHARE THIS DASHBOARD</p>
+        <h2>Department QR code</h2>
+      </div>
+    </section>
+
+    <section class="panel qr-panel">
+      <div>
+        <h3>One QR code, reusable over time</h3>
+
+        <p class="muted">
+          After publishing this site, create a QR code for its permanent
+          GitHub Pages address. Print it on the department notice board.
+          Keep the repository name and published URL unchanged so the same
+          QR code continues to work when the website is updated.
+        </p>
+
+        <button id="make-qr" class="button" type="button">
+          Generate QR code for this page
+        </button>
+
+        <button id="download-qr" class="button secondary" type="button" disabled>
+          Download QR PNG
+        </button>
+
+        <p id="qr-message" class="tiny muted">
+          The QR code is generated from this page's current address.
+        </p>
+      </div>
+
+      <div id="qrcode" class="qr-output" aria-label="QR code for this dashboard"></div>
+    </section>
+
+    <footer class="site-footer">
+      <strong>Department of Agronomy · Annamalai University</strong>
+
+      <p>Location: Annamalai Nagar, Chidambaram, Tamil Nadu, India</p>
+
+      <p>
+        Weather data: Open-Meteo model-based estimates; official IMD forecast
+        and warning links.
+      </p>
+
+      <p>
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+          Open-Meteo
+        </a>
+        ·
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer">
+          Hosted with GitHub Pages
+        </a>
+      </p>
+
+      <p class="tiny">
+        This page is an informational service and is not a substitute for
+        official warnings. Data availability, update frequency and local
+        accuracy may vary.
+      </p>
+    </footer>
+
+  </main>
+</body>
+</html>
