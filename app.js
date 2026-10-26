@@ -242,20 +242,17 @@
     } finally { $("refresh-btn").disabled = false; }
   }
   function makeQr() {
-    const target = window.location.href.split("#")[0];
-    if (!target.startsWith("https://") || target.includes("localhost") || target.includes("127.0.0.1")) {
-      $("qr-message").textContent = "Publish the site to GitHub Pages first, then open its HTTPS address and generate the QR code.";
-      return;
-    }
-    if (typeof QRCode === "undefined") {
-      $("qr-message").textContent = "QR library did not load. Check internet access and try again.";
-      return;
-    }
+    const target = "https://sheikshalik.github.io/annamalai-nagar-weather/";
     const host = $("qrcode");
+    if (!host) return;
+    if (typeof QRCode === "undefined") {
+      $("qr-message").textContent = "QR preview unavailable; use the website link shown here.";
+      return;
+    }
     host.innerHTML = "";
-    new QRCode(host, { text: target, width: 190, height: 190, colorDark: "#111111", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    new QRCode(host, { text: target, width: 100, height: 100, colorDark: "#111111", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
     $("download-qr").disabled = false;
-    $("qr-message").textContent = `QR target: ${target}. Keep this website URL unchanged for the printed QR code to remain valid.`;
+    $("qr-message").textContent = "QR code links to the permanent dashboard address.";
   }
   function downloadQr() {
     const host = $("qrcode"), canvas = host.querySelector("canvas"), img = host.querySelector("img");
@@ -264,8 +261,8 @@
     const a = document.createElement("a"); a.href = data; a.download = "annamalai-nagar-weather-qr.png"; a.click();
   }
   $("refresh-btn").addEventListener("click", loadWeather);
-  $("make-qr").addEventListener("click", makeQr);
   $("download-qr").addEventListener("click", downloadQr);
+  makeQr();
   loadWeather();
   // Refreshing the page reloads model data; this timer does not guarantee model updates every 15 minutes.
   setInterval(loadWeather, 15 * 60 * 1000);
