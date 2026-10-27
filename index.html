@@ -1,20 +1,17 @@
 <!doctype html>
+
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#164e35">
-  <meta name="description" content="Weather dashboard for the Department of Agronomy, Annamalai University, Annamalai Nagar, Chidambaram.">
+  <meta name="description" content="Weather dashboard for the Department of Agronomy, Annamalai University, Annamalai Nagar, Chidambaram, Tamil Nadu.">
   <title>Department of Agronomy | Annamalai Nagar Weather</title>
-
   <link rel="stylesheet" href="./styles.css">
-
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🌦️%3C/text%3E%3C/svg%3E">
-
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="./app.js"></script>
 </head>
-
 <body>
   <header class="site-header">
     <div class="brand-mark" aria-hidden="true">AU</div>
@@ -24,267 +21,189 @@
       <p class="subtitle">Weather Dashboard · Annamalai Nagar, Chidambaram, Tamil Nadu</p>
     </div>
   </header>
-
   <main class="container">
-
-    <section class="intro panel">
-      <div>
-        <p class="eyebrow green">LOCAL WEATHER · AGRICULTURAL USE</p>
-        <h2>Weather for the field, at a glance.</h2>
-        <p class="muted">
-          Current conditions, a 7-day forecast, rainfall outlook and practical
-          field-operation reminders for Annamalai Nagar.
-        </p>
-      </div>
-
-      <div class="updated-wrap">
-        <span class="status-dot"></span>
-        <span id="load-status" role="status">Connecting to weather services…</span>
-        <small id="updated-at">Update time will appear here</small>
-      </div>
-    </section>
-
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">RIGHT NOW</p>
-        <h2>Current weather</h2>
-      </div>
-      <button id="refresh-btn" class="button secondary" type="button">↻ Refresh</button>
-    </section>
-
-    <section class="current-grid" aria-label="Current weather conditions">
-
-      <article class="panel hero-weather">
-        <div class="weather-symbol" id="weather-icon" aria-hidden="true">🌤️</div>
-        <div>
-          <p class="muted no-margin" id="weather-description">Loading conditions…</p>
-          <div class="temperature">
-            <span id="temperature">—</span><span class="degree">°C</span>
-          </div>
-          <p class="muted no-margin">
-            Feels like <strong id="feels-like">—</strong>°C
-          </p>
-          <p class="tiny muted" id="model-note">
-            Model-based estimate; not a campus sensor reading.
-          </p>
-        </div>
-      </article>
-
-      <article class="panel metric">
-        <span class="metric-icon">💧</span>
-        <span class="metric-label">Relative humidity</span>
-        <strong><span id="humidity">—</span><small>%</small></strong>
-      </article>
-
-      <article class="panel metric">
-        <span class="metric-icon">🌧️</span>
-        <span class="metric-label">Rain in last model hour</span>
-        <strong><span id="rain-now">—</span><small>mm</small></strong>
-      </article>
-
-      <article class="panel metric">
-        <span class="metric-icon">💨</span>
-        <span class="metric-label">Wind speed</span>
-        <strong><span id="wind">—</span><small>km/h</small></strong>
-        <span class="tiny muted" id="wind-direction">Direction —</span>
-      </article>
-
-      <article class="panel metric">
-        <span class="metric-icon">🌡️</span>
-        <span class="metric-label">Pressure</span>
-        <strong><span id="pressure">—</span><small>hPa</small></strong>
-      </article>
-
-      <article class="panel metric">
-        <span class="metric-icon">☀️</span>
-        <span class="metric-label">UV index</span>
-        <strong><span id="uv">—</span></strong>
-        <span class="tiny muted">Forecast model</span>
-      </article>
-
-    </section>
-
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">PLAN AHEAD</p>
-        <h2>7-day forecast</h2>
-      </div>
-      <p class="tiny muted">Daily values are forecast estimates.</p>
-    </section>
-
-    <section id="forecast-grid" class="forecast-grid" aria-live="polite">
-      <article class="panel forecast-card">Loading forecast…</article>
-    </section>
-
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">RAIN WATCH</p>
-        <h2>Rainfall outlook</h2>
-      </div>
-    </section>
-
-    <section class="panel rainfall-panel">
-
-      <div class="rain-summary">
-
-        <div>
-          <span class="metric-label">Last 24 hours · model estimate</span>
-          <strong><span id="rain-past-24">—</span> mm</strong>
-        </div>
-
-        <div>
-          <span class="metric-label">Next 7 days · forecast total</span>
-          <strong><span id="rain-7">—</span> mm</strong>
-        </div>
-
-        <div>
-          <span class="metric-label">Next 24h rain chance (max hourly)</span>
-          <strong><span id="rain-chance">—</span>%</strong>
-        </div>
-
-      </div>
-
-      <div id="rain-chart" class="rain-chart" aria-label="Daily rainfall chart"></div>
-
-      <p class="tiny muted">
-        The last-24-hour rainfall value is an Open-Meteo model estimate, not a
-        measurement from an on-campus rain gauge. It may differ from rainfall
-        observed locally. The seven-day figure and daily bars are forecast
-        estimates; today's bar may include hours that have already passed.
-        The rain-chance value is the maximum hourly probability forecast during
-        the upcoming 24 hours, not the probability that it will rain all day.
-        For observed rainfall, cross-check the nearest reporting station through
-        official IMD or Tamil Nadu TN-SMART reports.
-      </p>
-
-    </section>
-
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">AGRONOMY NOTES</p>
-        <h2>Weather-aware field reminders</h2>
-      </div>
-    </section>
-
-    <section id="advisories" class="advisory-grid">
-      <article class="panel advisory">Preparing weather-aware reminders…</article>
-    </section>
-
-    <p class="notice">
-      These are general, rule-based reminders—not official IMD advisories or
-      crop-specific prescriptions. Follow current IMD warnings, local extension
-      recommendations, crop stage and field conditions before making decisions.
+<section class="intro panel">
+  <div>
+    <p class="eyebrow green">LOCAL WEATHER · AGRICULTURAL USE</p>
+    <h2>Weather for the field, at a glance.</h2>
+    <p class="muted">
+      Current conditions, a 7-day forecast, rainfall outlook and
+      practical field-operation reminders for Annamalai Nagar.
     </p>
-
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow">OFFICIAL REFERENCE</p>
-        <h2>IMD information</h2>
+  </div>
+  <div class="updated-wrap">
+    <span class="status-dot"></span>
+    <span id="load-status" role="status">Connecting to weather services…</span>
+    <small id="updated-at">Update time will appear here</small>
+  </div>
+</section>
+<section class="section-heading">
+  <div>
+    <p class="eyebrow">RIGHT NOW</p>
+    <h2>Current weather</h2>
+  </div>
+  <button id="refresh-btn" class="button secondary" type="button">↻ Refresh</button>
+</section>
+<section class="current-grid" aria-label="Current weather conditions">
+  <article class="panel hero-weather">
+    <div class="weather-symbol" id="weather-icon" aria-hidden="true">🌤️</div>
+    <div>
+      <p class="muted no-margin" id="weather-description">Loading conditions…</p>
+      <div class="temperature">
+        <span id="temperature">—</span><span class="degree">°C</span>
       </div>
-    </section>
-
-    <section class="panel source-panel">
-
-      <div class="source-badge">IMD</div>
-
-      <div class="source-copy">
-        <h3>India Meteorological Department</h3>
-
-        <p class="muted">
-          Check official forecasts, district warnings and rainfall bulletins.
-          This dashboard uses Open-Meteo for numerical weather estimates and
-          links to IMD for official forecasts and warnings. A verified,
-          authorised IMD station feed for Annamalai Nagar has not yet been connected.
-        </p>
-
-        <div class="link-row">
-          <a href="https://mausam.imd.gov.in/responsive/wxRealized.php"
-             target="_blank" rel="noopener noreferrer">
-            IMD realized / station rainfall ↗
-          </a>
-
-          <a href="https://mausam.imd.gov.in/responsive/rainfallinformation_state.php"
-             target="_blank" rel="noopener noreferrer">
-            IMD rainfall information ↗
-          </a>
-
-          <a href="https://beta-tnsmart.rimes.int/index.php/MIS/Rainfall/daily_reports/"
-             target="_blank" rel="noopener noreferrer">
-            Tamil Nadu TN-SMART rainfall report ↗
-          </a>
-
-          <a href="https://mausam.imd.gov.in/"
-             target="_blank" rel="noopener noreferrer">
-            IMD Mausam website ↗
-          </a>
-        </div>
-
-        <p id="imd-status" class="tiny muted">
-          Live IMD warning data is not integrated in this version.
-        </p>
-      </div>
-
-    </section>
-
-    <section class="share-strip" aria-label="Share this dashboard">
-
-      <div class="share-copy">
-        <p class="eyebrow">SHARE DASHBOARD</p>
-        <h2>Share the weather dashboard</h2>
-
-        <p class="muted">
-          Copy the website address or scan the QR code to open the dashboard.
-        </p>
-
-        <a class="share-url"
-           href="https://sheikshalik.github.io/annamalai-nagar-weather/"
-           target="_blank"
-           rel="noopener noreferrer">
-          https://sheikshalik.github.io/annamalai-nagar-weather/
-        </a>
-
-        <div class="share-actions">
-          <button id="download-qr" class="button secondary" type="button" disabled>
-            Download QR PNG
-          </button>
-          <span id="qr-message" class="tiny muted" role="status">
-            Preparing QR code…
-          </span>
-        </div>
-      </div>
-
-      <div id="qrcode" class="qr-output compact-qr"
-           aria-label="QR code linking to the weather dashboard"></div>
-
-    </section>
-
-    <footer class="site-footer">
-      <strong>Department of Agronomy · Annamalai University</strong>
-
-      <p>Location: Annamalai Nagar, Chidambaram, Tamil Nadu, India</p>
-
-      <p>
-        Weather data: Open-Meteo model-based estimates; official IMD forecast
-        and warning links.
+      <p class="muted no-margin">
+        Feels like <strong id="feels-like">—</strong>°C
       </p>
-
-      <p>
-        <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
-          Open-Meteo
-        </a>
-        ·
-        <a href="https://github.com/" target="_blank" rel="noopener noreferrer">
-          Hosted with GitHub Pages
-        </a>
+      <p class="tiny muted" id="model-note">
+        Open-Meteo model-based estimate; not a campus sensor reading.
       </p>
-
-      <p class="tiny">
-        This page is an informational service and is not a substitute for
-        official warnings. Data availability, update frequency and local
-        accuracy may vary.
-      </p>
-    </footer>
-
+    </div>
+  </article>
+  <article class="panel metric">
+    <span class="metric-icon">💧</span>
+    <span class="metric-label">Relative humidity</span>
+    <strong><span id="humidity">—</span><small>%</small></strong>
+  </article>
+  <article class="panel metric">
+    <span class="metric-icon">💨</span>
+    <span class="metric-label">Maximum wind gust · next 6 hours</span>
+    <strong><span id="gust-next-6">—</span><small>km/h</small></strong>
+    <span class="tiny muted" id="gust-note">Forecast model estimate</span>
+  </article>
+  <article class="panel metric">
+    <span class="metric-icon">🌬️</span>
+    <span class="metric-label">Wind speed</span>
+    <strong><span id="wind">—</span><small>km/h</small></strong>
+    <span class="tiny muted" id="wind-direction">Direction —</span>
+  </article>
+  <article class="panel metric">
+    <span class="metric-icon">🌡️</span>
+    <span class="metric-label">Pressure</span>
+    <strong><span id="pressure">—</span><small>hPa</small></strong>
+  </article>
+  <article class="panel metric">
+    <span class="metric-icon">☀️</span>
+    <span class="metric-label">UV index</span>
+    <strong><span id="uv">—</span></strong>
+    <span class="tiny muted">Forecast model estimate</span>
+  </article>
+</section>
+<section class="section-heading">
+  <div>
+    <p class="eyebrow">PLAN AHEAD</p>
+    <h2>7-day forecast</h2>
+  </div>
+  <p class="tiny muted">Daily values are forecast estimates.</p>
+</section>
+<section id="forecast-grid" class="forecast-grid" aria-live="polite">
+  <article class="panel forecast-card">Loading forecast…</article>
+</section>
+<section class="section-heading">
+  <div>
+    <p class="eyebrow">RAIN WATCH</p>
+    <h2>Rainfall outlook</h2>
+  </div>
+</section>
+<section class="panel rainfall-panel">
+  <div class="rain-summary">
+    <div>
+      <span class="metric-label">Last 24 hours · model estimate</span>
+      <strong><span id="rain-past-24">—</span> mm</strong>
+    </div>
+    <div>
+      <span class="metric-label">Next 7 days · forecast total</span>
+      <strong><span id="rain-7">—</span> mm</strong>
+    </div>
+    <div>
+      <span class="metric-label">Next 24h rain chance · maximum hourly</span>
+      <strong><span id="rain-chance">—</span>%</strong>
+    </div>
+  </div>
+  <div id="rain-chart" class="rain-chart" aria-label="Daily rainfall chart"></div>
+  <p class="tiny muted">
+    Rainfall values are weather-model estimates, not verified
+    measurements from a campus rain gauge. Local showers may differ
+    from model estimates. The next-24-hour rain chance is the highest
+    hourly probability forecast during that period, not a guarantee
+    that rain will occur. For observed rainfall, consult official
+    IMD or Tamil Nadu TN-SMART reports.
+  </p>
+</section>
+<section class="section-heading">
+  <div>
+    <p class="eyebrow">AGRONOMY NOTES</p>
+    <h2>Weather-aware field reminders</h2>
+  </div>
+</section>
+<section id="advisories" class="advisory-grid">
+  <article class="panel advisory">Preparing weather-aware reminders…</article>
+</section>
+<p class="notice">
+  These are general, rule-based reminders—not official IMD advisories
+  or crop-specific prescriptions. Follow current IMD warnings, local
+  extension recommendations, crop stage and field conditions before
+  making decisions.
+</p>
+<section class="section-heading">
+  <div>
+    <p class="eyebrow">OFFICIAL REFERENCE</p>
+    <h2>IMD information</h2>
+  </div>
+</section>
+<section class="panel source-panel">
+  <div class="source-badge">IMD</div>
+  <div class="source-copy">
+    <h3>India Meteorological Department</h3>
+    <p class="muted">
+      Check official forecasts, district warnings and rainfall
+      bulletins. The numerical dashboard uses Open-Meteo model data.
+      A verified, authorised IMD station feed for Annamalai Nagar
+      has not yet been connected.
+    </p>
+    <div class="link-row">
+      <a href="https://mausam.imd.gov.in/responsive/wxRealized.php" target="_blank" rel="noopener noreferrer">IMD realized / station rainfall ↗</a>
+      <a href="https://mausam.imd.gov.in/responsive/rainfallinformation_state.php" target="_blank" rel="noopener noreferrer">IMD rainfall information ↗</a>
+      <a href="https://beta-tnsmart.rimes.int/index.php/MIS/Rainfall/daily_reports/" target="_blank" rel="noopener noreferrer">Tamil Nadu TN-SMART rainfall report ↗</a>
+      <a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener noreferrer">IMD Mausam website ↗</a>
+    </div>
+    <p id="imd-status" class="tiny muted">
+      Official station feed has not been connected.
+    </p>
+  </div>
+</section>
+<section class="share-section" aria-labelledby="share-title">
+  <p class="eyebrow">SHARE DASHBOARD</p>
+  <h2 id="share-title">Share the weather dashboard</h2>
+  <p class="share-caption">
+    Scan the QR code to open the Annamalai Nagar Weather Dashboard.
+  </p>
+  <div
+    id="qrcode"
+    class="qr-output qr-output-visible"
+    role="img"
+    aria-label="QR code to open the Annamalai Nagar Weather Dashboard">
+  </div>
+  <p id="qr-message" class="tiny muted">Preparing QR code…</p>
+</section>
+<footer class="site-footer">
+  <strong>Department of Agronomy · Annamalai University</strong>
+  <p>Location: Annamalai Nagar, Chidambaram, Tamil Nadu, India</p>
+  <p>
+    Weather data: Open-Meteo model-based estimates; official IMD
+    forecast and warning links.
+  </p>
+  <p>
+    <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+    ·
+    <a href="https://github.com/" target="_blank" rel="noopener noreferrer">Hosted with GitHub Pages</a>
+  </p>
+  <p class="tiny">
+    This page is an informational service and is not a substitute
+    for official warnings. Data availability, update frequency and
+    local accuracy may vary.
+  </p>
+</footer>
   </main>
 </body>
 </html>
