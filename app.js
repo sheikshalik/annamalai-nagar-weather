@@ -54,7 +54,40 @@
     if (exact >= 0) return exact;
     const currentMs = new Date(current.time + ":00+05:30").getTime();
     const idx = times.findIndex(t => new Date(t + ":00+05:30").getTime() >= currentMs);
-    return idx >= 0 ? idx : 0;
+    return idx >= 0 ? idx : Math.max(0, times.length - 1);
+  }
+  // Find the most recent hourly-series timestamp that has already elapsed.
+  // This avoids accidentally showing the next hour's forecast as recent rain.
+  function latestElapsedHourIndex(hourly, currentTime) {
+    const times = hourly.time || [];
+    const currentMs = localHourMs(currentTime);
+    let found = -1;
+    for (let i = 0; i < times.length; i++) {
+      if (localHourMs(times[i]) <= currentMs) found = i;
+      else break;
+    }
+    return found;
+  }
+  function recentHourlyRain(hourly, currentTime, hours) {
+    const times = hourly.time || [];
+    const values = hourly.precipitation || [];
+    const endIndex = latestElapsedHourIndex(hourly, currentTime);
+    if (endIndex < 0) return { total: NaN, count: 0, endTime: null, latest: NaN };
+    const endMs = localHourMs(times[endIndex]);
+    const startMs = endMs - hours * 60 * 60 * 1000;
+    let total = 0, count = 0, latest = NaN;
+    for (let i = 0; i <= endIndex; i++) {
+      const t = localHourMs(times[i]);
+      if (t > startMs && t <= endMs) {
+        const value = Number(values[i]);
+        if (Number.isFinite(value)) {
+          total += value;
+          count++;
+          if (i === endIndex) latest = value;
+        }
+      }
+    }
+    return { total, count, endTime: times[endIndex], latest };
   }
   function sliceHours(hourly, key, start, count) {
     return (hourly[key] || []).slice(start, start + count).map(Number).filter(Number.isFinite);
@@ -218,7 +251,11 @@
       $("temperature").textContent = fmt(c.temperature_2m,1);
       $("feels-like").textContent = fmt(c.apparent_temperature,1);
       $("humidity").textContent = fmt(c.relative_humidity_2m,0);
-      $("rain-now").textContent = fmt(c.precipitation,1);
+      const gustNext6 = maxHours(data.hourly, "wind_gusts_10m", start, 6);
+      $("gust-next-6").textContent = Number.isFinite(gustNext6) ? fmt(gustNext6,1) : "—";
+      $("gust-note").textContent = Number.isFinite(gustNext6)
+        ? "Highest hourly gust estimate in the next 6 hours; not a campus sensor reading"
+        : "Wind-gust forecast unavailable";
       $("wind").textContent = fmt(c.wind_speed_10m,1);
       $("wind-direction").textContent = `Direction ${windDir(c.wind_direction_10m)} (${fmt(c.wind_direction_10m,0)}°)`;
       $("pressure").textContent = fmt(c.pressure_msl,0);
@@ -246,22 +283,14 @@
     const host = $("qrcode");
     if (!host) return;
     if (typeof QRCode === "undefined") {
-      $("qr-message").textContent = "QR preview unavailable; use the website link shown here.";
+      $("qr-message").textContent = "QR code could not load. Please refresh the page.";
       return;
     }
     host.innerHTML = "";
-    new QRCode(host, { text: target, width: 100, height: 100, colorDark: "#111111", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-    $("download-qr").disabled = false;
-    $("qr-message").textContent = "QR code links to the permanent dashboard address.";
-  }
-  function downloadQr() {
-    const host = $("qrcode"), canvas = host.querySelector("canvas"), img = host.querySelector("img");
-    const data = canvas ? canvas.toDataURL("image/png") : (img ? img.src : null);
-    if (!data) return;
-    const a = document.createElement("a"); a.href = data; a.download = "annamalai-nagar-weather-qr.png"; a.click();
+    new QRCode(host, { text: target, width: 220, height: 220, colorDark: "#102b3f", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    $("qr-message").textContent = "";
   }
   $("refresh-btn").addEventListener("click", loadWeather);
-  $("download-qr").addEventListener("click", downloadQr);
   makeQr();
   loadWeather();
   // Refreshing the page reloads model data; this timer does not guarantee model updates every 15 minutes.
