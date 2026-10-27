@@ -1,209 +1,512 @@
 <!doctype html>
-
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#164e35">
-  <meta name="description" content="Weather dashboard for the Department of Agronomy, Annamalai University, Annamalai Nagar, Chidambaram, Tamil Nadu.">
-  <title>Department of Agronomy | Annamalai Nagar Weather</title>
+  <meta name="theme-color" content="#071a2b">
+  <meta name="description" content="Cinematic weather and agricultural meteorology dashboard for Annamalai Nagar, Annamalai University.">
+  <meta name="author" content="Department of Agronomy, Annamalai University">
+  <title>Annamalai Nagar | Agronomy Weather Intelligence</title>
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Website styling -->
   <link rel="stylesheet" href="./styles.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🌦️%3C/text%3E%3C/svg%3E">
+  <!-- Website icon -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E%F0%9F%8C%A6%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <!-- QR code library -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Weather dashboard application -->
   <script defer src="./app.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand-mark" aria-hidden="true">AU</div>
-    <div>
-      <p class="eyebrow">ANNAMALAI UNIVERSITY</p>
-      <h1>Department of Agronomy</h1>
-      <p class="subtitle">Weather Dashboard · Annamalai Nagar, Chidambaram, Tamil Nadu</p>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <!-- =========================
+       HEADER
+  ========================== -->
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Annamalai Nagar Weather home">
+      <span class="brand-icon">AU</span>
+      <span>
+        <b>ANNAMALAI UNIVERSITY</b>
+        <small>DEPARTMENT OF AGRONOMY</small>
+      </span>
+    </a>
+    <div class="top-meta">
+      <span class="location-pill">
+        ⌖ &nbsp; ANNAMALAI NAGAR, TAMIL NADU
+      </span>
+      <span class="live-state">
+        <i></i>
+        <span id="load-status">Connecting to weather services…</span>
+      </span>
     </div>
   </header>
-  <main class="container">
-<section class="intro panel">
-  <div>
-    <p class="eyebrow green">LOCAL WEATHER · AGRICULTURAL USE</p>
-    <h2>Weather for the field, at a glance.</h2>
-    <p class="muted">
-      Current conditions, a 7-day forecast, rainfall outlook and
-      practical field-operation reminders for Annamalai Nagar.
-    </p>
-  </div>
-  <div class="updated-wrap">
-    <span class="status-dot"></span>
-    <span id="load-status" role="status">Connecting to weather services…</span>
-    <small id="updated-at">Update time will appear here</small>
-  </div>
-</section>
-<section class="section-heading">
-  <div>
-    <p class="eyebrow">RIGHT NOW</p>
-    <h2>Current weather</h2>
-  </div>
-  <button id="refresh-btn" class="button secondary" type="button">↻ Refresh</button>
-</section>
-<section class="current-grid" aria-label="Current weather conditions">
-  <article class="panel hero-weather">
-    <div class="weather-symbol" id="weather-icon" aria-hidden="true">🌤️</div>
-    <div>
-      <p class="muted no-margin" id="weather-description">Loading conditions…</p>
-      <div class="temperature">
-        <span id="temperature">—</span><span class="degree">°C</span>
+  <main id="top" class="wrap">
+    <!-- =========================
+         CINEMATIC HERO
+    ========================== -->
+    <section class="hero">
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="kicker">
+          <span class="kicker-line"></span>
+          LOCAL WEATHER INTELLIGENCE
+          <span class="kicker-line"></span>
+        </p>
+        <h1>
+          Weather meets<br>
+          <em>the science of the field.</em>
+        </h1>
+        <p class="hero-sub">
+          A weather and agro-meteorology dashboard for
+          Annamalai Nagar, Tamil Nadu.
+        </p>
+        <div class="hero-foot">
+          <div class="hero-time">
+            <span class="tiny-label">LATEST AVAILABLE MODEL TIME</span>
+            <strong id="model-time">Waiting for data…</strong>
+          </div>
+          <div class="hero-time">
+            <span class="tiny-label">WEBSITE LAST REFRESH</span>
+            <strong id="updated-at">Waiting for data…</strong>
+          </div>
+          <button id="refresh-btn" class="refresh-btn" type="button">
+            <span>↻</span> Refresh now
+          </button>
+        </div>
       </div>
-      <p class="muted no-margin">
-        Feels like <strong id="feels-like">—</strong>°C
+      <div class="hero-orb orb-sun"></div>
+      <div class="hero-orb orb-ring"></div>
+      <div class="hero-bottom-label">
+        11.3893° N &nbsp; / &nbsp; 79.7158° E
+        <span>•</span>
+        FIXED LOCATION
+      </div>
+    </section>
+    <!-- =========================
+         DATA TRANSPARENCY
+    ========================== -->
+    <div class="source-note">
+      <span class="note-icon">ⓘ</span>
+      <span>
+        <b>Know your data:</b>
+        Weather and agronomy values are Open-Meteo model estimates
+        for the selected coordinates, not readings from a sensor on
+        campus. Model update times vary.
+      </span>
+      <span id="freshness" class="freshness">
+        Awaiting update
+      </span>
+    </div>
+    <!-- =========================
+         CURRENT WEATHER
+    ========================== -->
+    <section class="section-head">
+      <div>
+        <p class="eyebrow">01 / ATMOSPHERE</p>
+        <h2>Right now <span>in Annamalai Nagar</span></h2>
+      </div>
+      <p class="section-caption">
+        Current conditions · Asia/Kolkata (IST)
       </p>
-      <p class="tiny muted" id="model-note">
-        Open-Meteo model-based estimate; not a campus sensor reading.
+    </section>
+    <section class="weather-grid">
+      <!-- Main temperature card -->
+      <article class="current-card glass">
+        <div class="current-top">
+          <span class="mini-chip">CURRENT ESTIMATE</span>
+          <span id="day-night" class="day-chip">LOCAL CONDITIONS</span>
+        </div>
+        <div class="current-main">
+          <div>
+            <div id="weather-icon" class="weather-icon">🌤️</div>
+            <p id="weather-description" class="condition">
+              Loading conditions…
+            </p>
+          </div>
+          <div class="temp-wrap">
+            <div class="temperature">
+              <span id="temperature">—</span>
+              <sup>°C</sup>
+            </div>
+            <p>
+              Feels like
+              <b><span id="feels-like">—</span>°C</b>
+            </p>
+          </div>
+        </div>
+        <div class="current-bottom">
+          <span>Data provider <b>Open-Meteo</b></span>
+          <span>Coordinate-specific model</span>
+        </div>
+      </article>
+      <!-- Humidity -->
+      <article class="metric-card tint-cyan">
+        <div class="metric-head">
+          <span class="metric-icon">◉</span>
+          <span class="metric-tag">MOISTURE</span>
+        </div>
+        <p>Relative humidity</p>
+        <div class="metric-value">
+          <span id="humidity">—</span>
+          <small>%</small>
+        </div>
+        <div class="metric-foot">
+          Dew point
+          <b><span id="dew-point">—</span>°C</b>
+        </div>
+        <div class="meter">
+          <i id="humidity-meter"></i>
+        </div>
+      </article>
+      <!-- Wind -->
+      <article class="metric-card tint-blue">
+        <div class="metric-head">
+          <span class="metric-icon">〰</span>
+          <span class="metric-tag">WIND</span>
+        </div>
+        <p>Wind speed</p>
+        <div class="metric-value">
+          <span id="wind">—</span>
+          <small>km/h</small>
+        </div>
+        <div class="metric-foot">
+          <b id="wind-direction">Direction —</b>
+        </div>
+        <div class="metric-glow"></div>
+      </article>
+      <!-- Wind gust -->
+      <article class="metric-card tint-violet">
+        <div class="metric-head">
+          <span class="metric-icon">↗</span>
+          <span class="metric-tag">GUST OUTLOOK</span>
+        </div>
+        <p>Maximum gust · next 6 hours</p>
+        <div class="metric-value">
+          <span id="gust-next-6">—</span>
+          <small>km/h</small>
+        </div>
+        <div class="metric-foot">
+          Current gust
+          <b><span id="gust-current">—</span> km/h</b>
+        </div>
+        <div class="metric-glow"></div>
+      </article>
+      <!-- Atmospheric pressure -->
+      <article class="metric-card tint-gold">
+        <div class="metric-head">
+          <span class="metric-icon">◌</span>
+          <span class="metric-tag">PRESSURE</span>
+        </div>
+        <p>Atmospheric pressure</p>
+        <div class="metric-value">
+          <span id="pressure">—</span>
+          <small>hPa</small>
+        </div>
+        <div class="metric-foot">
+          Sea-level pressure estimate
+        </div>
+      </article>
+      <!-- UV -->
+      <article class="metric-card tint-orange">
+        <div class="metric-head">
+          <span class="metric-icon">☼</span>
+          <span class="metric-tag">SOLAR</span>
+        </div>
+        <p>UV index</p>
+        <div class="metric-value">
+          <span id="uv">—</span>
+        </div>
+        <div id="uv-note" class="metric-foot">
+          Forecast estimate
+        </div>
+        <div class="uv-track">
+          <i id="uv-meter"></i>
+        </div>
+      </article>
+      <!-- Cloud cover -->
+      <article class="metric-card tint-green">
+        <div class="metric-head">
+          <span class="metric-icon">☁</span>
+          <span class="metric-tag">SKY</span>
+        </div>
+        <p>Cloud cover</p>
+        <div class="metric-value">
+          <span id="cloud-cover">—</span>
+          <small>%</small>
+        </div>
+        <div class="metric-foot">
+          Wet-bulb
+          <b><span id="wet-bulb">—</span>°C</b>
+        </div>
+      </article>
+    </section>
+    <!-- =========================
+         SEVEN-DAY FORECAST
+    ========================== -->
+    <section class="section-head section-spaced">
+      <div>
+        <p class="eyebrow">02 / PLAN AHEAD</p>
+        <h2>Seven-day forecast</h2>
+      </div>
+      <p class="section-caption">
+        Daily forecast estimates · not guarantees
       </p>
-    </div>
-  </article>
-  <article class="panel metric">
-    <span class="metric-icon">💧</span>
-    <span class="metric-label">Relative humidity</span>
-    <strong><span id="humidity">—</span><small>%</small></strong>
-  </article>
-  <article class="panel metric">
-    <span class="metric-icon">💨</span>
-    <span class="metric-label">Maximum wind gust · next 6 hours</span>
-    <strong><span id="gust-next-6">—</span><small>km/h</small></strong>
-    <span class="tiny muted" id="gust-note">Forecast model estimate</span>
-  </article>
-  <article class="panel metric">
-    <span class="metric-icon">🌬️</span>
-    <span class="metric-label">Wind speed</span>
-    <strong><span id="wind">—</span><small>km/h</small></strong>
-    <span class="tiny muted" id="wind-direction">Direction —</span>
-  </article>
-  <article class="panel metric">
-    <span class="metric-icon">🌡️</span>
-    <span class="metric-label">Pressure</span>
-    <strong><span id="pressure">—</span><small>hPa</small></strong>
-  </article>
-  <article class="panel metric">
-    <span class="metric-icon">☀️</span>
-    <span class="metric-label">UV index</span>
-    <strong><span id="uv">—</span></strong>
-    <span class="tiny muted">Forecast model estimate</span>
-  </article>
-</section>
-<section class="section-heading">
-  <div>
-    <p class="eyebrow">PLAN AHEAD</p>
-    <h2>7-day forecast</h2>
-  </div>
-  <p class="tiny muted">Daily values are forecast estimates.</p>
-</section>
-<section id="forecast-grid" class="forecast-grid" aria-live="polite">
-  <article class="panel forecast-card">Loading forecast…</article>
-</section>
-<section class="section-heading">
-  <div>
-    <p class="eyebrow">RAIN WATCH</p>
-    <h2>Rainfall outlook</h2>
-  </div>
-</section>
-<section class="panel rainfall-panel">
-  <div class="rain-summary">
-    <div>
-      <span class="metric-label">Last 24 hours · model estimate</span>
-      <strong><span id="rain-past-24">—</span> mm</strong>
-    </div>
-    <div>
-      <span class="metric-label">Next 7 days · forecast total</span>
-      <strong><span id="rain-7">—</span> mm</strong>
-    </div>
-    <div>
-      <span class="metric-label">Next 24h rain chance · maximum hourly</span>
-      <strong><span id="rain-chance">—</span>%</strong>
-    </div>
-  </div>
-  <div id="rain-chart" class="rain-chart" aria-label="Daily rainfall chart"></div>
-  <p class="tiny muted">
-    Rainfall values are weather-model estimates, not verified
-    measurements from a campus rain gauge. Local showers may differ
-    from model estimates. The next-24-hour rain chance is the highest
-    hourly probability forecast during that period, not a guarantee
-    that rain will occur. For observed rainfall, consult official
-    IMD or Tamil Nadu TN-SMART reports.
-  </p>
-</section>
-<section class="section-heading">
-  <div>
-    <p class="eyebrow">AGRONOMY NOTES</p>
-    <h2>Weather-aware field reminders</h2>
-  </div>
-</section>
-<section id="advisories" class="advisory-grid">
-  <article class="panel advisory">Preparing weather-aware reminders…</article>
-</section>
-<p class="notice">
-  These are general, rule-based reminders—not official IMD advisories
-  or crop-specific prescriptions. Follow current IMD warnings, local
-  extension recommendations, crop stage and field conditions before
-  making decisions.
-</p>
-<section class="section-heading">
-  <div>
-    <p class="eyebrow">OFFICIAL REFERENCE</p>
-    <h2>IMD information</h2>
-  </div>
-</section>
-<section class="panel source-panel">
-  <div class="source-badge">IMD</div>
-  <div class="source-copy">
-    <h3>India Meteorological Department</h3>
-    <p class="muted">
-      Check official forecasts, district warnings and rainfall
-      bulletins. The numerical dashboard uses Open-Meteo model data.
-      A verified, authorised IMD station feed for Annamalai Nagar
-      has not yet been connected.
-    </p>
-    <div class="link-row">
-      <a href="https://mausam.imd.gov.in/responsive/wxRealized.php" target="_blank" rel="noopener noreferrer">IMD realized / station rainfall ↗</a>
-      <a href="https://mausam.imd.gov.in/responsive/rainfallinformation_state.php" target="_blank" rel="noopener noreferrer">IMD rainfall information ↗</a>
-      <a href="https://beta-tnsmart.rimes.int/index.php/MIS/Rainfall/daily_reports/" target="_blank" rel="noopener noreferrer">Tamil Nadu TN-SMART rainfall report ↗</a>
-      <a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener noreferrer">IMD Mausam website ↗</a>
-    </div>
-    <p id="imd-status" class="tiny muted">
-      Official station feed has not been connected.
-    </p>
-  </div>
-</section>
-<section class="share-section" aria-labelledby="share-title">
-  <p class="eyebrow">SHARE DASHBOARD</p>
-  <h2 id="share-title">Share the weather dashboard</h2>
-  <p class="share-caption">
-    Scan the QR code to open the Annamalai Nagar Weather Dashboard.
-  </p>
-  <div
-    id="qrcode"
-    class="qr-output qr-output-visible"
-    role="img"
-    aria-label="QR code to open the Annamalai Nagar Weather Dashboard">
-  </div>
-  <p id="qr-message" class="tiny muted">Preparing QR code…</p>
-</section>
-<footer class="site-footer">
-  <strong>Department of Agronomy · Annamalai University</strong>
-  <p>Location: Annamalai Nagar, Chidambaram, Tamil Nadu, India</p>
-  <p>
-    Weather data: Open-Meteo model-based estimates; official IMD
-    forecast and warning links.
-  </p>
-  <p>
-    <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
-    ·
-    <a href="https://github.com/" target="_blank" rel="noopener noreferrer">Hosted with GitHub Pages</a>
-  </p>
-  <p class="tiny">
-    This page is an informational service and is not a substitute
-    for official warnings. Data availability, update frequency and
-    local accuracy may vary.
-  </p>
-</footer>
+    </section>
+    <section id="forecast-grid" class="forecast-grid">
+      <article class="forecast-card">
+        Loading forecast…
+      </article>
+    </section>
+    <!-- =========================
+         RAINFALL OUTLOOK
+    ========================== -->
+    <section class="section-head section-spaced">
+      <div>
+        <p class="eyebrow">03 / RAIN WATCH</p>
+        <h2>Rainfall outlook</h2>
+      </div>
+      <p class="section-caption">
+        Forecast precipitation · millimetres
+      </p>
+    </section>
+    <section class="rain-panel glass">
+      <div class="rain-stats">
+        <div>
+          <span>PREVIOUS 24H · MODEL ESTIMATE</span>
+          <strong>
+            <b id="rain-past-24">—</b>
+            <small>mm</small>
+          </strong>
+        </div>
+        <div>
+          <span>NEXT 7 DAYS · FORECAST TOTAL</span>
+          <strong>
+            <b id="rain-7">—</b>
+            <small>mm</small>
+          </strong>
+        </div>
+        <div>
+          <span>MAX HOURLY CHANCE · NEXT 24H</span>
+          <strong>
+            <b id="rain-chance">—</b>
+            <small>%</small>
+          </strong>
+        </div>
+        <div>
+          <span>PRECIPITATION · NEXT 24H</span>
+          <strong>
+            <b id="rain-next-24">—</b>
+            <small>mm</small>
+          </strong>
+        </div>
+      </div>
+      <div class="chart-title">
+        <b>Daily rainfall forecast</b>
+        <span>Next 7 days</span>
+      </div>
+      <div
+        id="rain-chart"
+        class="rain-chart"
+        aria-label="Daily rainfall forecast chart">
+      </div>
+      <p class="fine-print">
+        The previous-24-hour figure is modelled precipitation,
+        not an observed rain-gauge total. Forecast totals can differ
+        from actual rainfall. A value of 0 mm does not prove that
+        no rain occurred locally.
+      </p>
+    </section>
+    <!-- =========================
+         AGRICULTURAL WEATHER
+    ========================== -->
+    <section class="section-head section-spaced">
+      <div>
+        <p class="eyebrow">04 / AGRO-METEOROLOGY</p>
+        <h2>Weather for the field</h2>
+      </div>
+      <p class="section-caption">
+        Decision-support estimates for researchers
+      </p>
+    </section>
+    <section class="agro-grid">
+      <!-- ET0 -->
+      <article class="agro-card agro-et">
+        <div class="agro-art">ET₀</div>
+        <div class="agro-content">
+          <span>REFERENCE EVAPOTRANSPIRATION</span>
+          <strong>
+            <b id="et0">—</b>
+            <small>mm/day</small>
+          </strong>
+          <p>
+            Atmospheric water demand from a reference surface;
+            not actual rice-crop water use.
+          </p>
+        </div>
+      </article>
+      <!-- VPD -->
+      <article class="agro-card agro-vpd">
+        <div class="agro-art">VPD</div>
+        <div class="agro-content">
+          <span>VAPOUR PRESSURE DEFICIT</span>
+          <strong>
+            <b id="vpd">—</b>
+            <small>kPa</small>
+          </strong>
+          <p>
+            Indicates atmospheric drying demand; interpret with
+            crop stage and field moisture.
+          </p>
+        </div>
+      </article>
+      <!-- Solar radiation -->
+      <article class="agro-card agro-rad">
+        <div class="agro-art">☀</div>
+        <div class="agro-content">
+          <span>SHORTWAVE SOLAR RADIATION</span>
+          <strong>
+            <b id="solar">—</b>
+            <small>W/m²</small>
+          </strong>
+          <p>
+            Modelled solar energy reaching the surface at the
+            selected time.
+          </p>
+        </div>
+      </article>
+      <!-- Soil -->
+      <article class="agro-card agro-soil">
+        <div class="agro-art">SOIL</div>
+        <div class="agro-content">
+          <span>MODELLED SOIL CONDITIONS</span>
+          <div class="soil-values">
+            <div>
+              <small>Temperature · 0–7 cm</small>
+              <strong>
+                <b id="soil-temp">—</b> °C
+              </strong>
+            </div>
+            <div>
+              <small>Moisture · 0–7 cm</small>
+              <strong>
+                <b id="soil-moisture">—</b> m³/m³
+              </strong>
+            </div>
+          </div>
+          <p>
+            Gridded model estimates; not measurements from a
+            university experimental plot.
+          </p>
+        </div>
+      </article>
+    </section>
+    <!-- =========================
+         FIELD ADVISORIES
+    ========================== -->
+    <section class="section-head section-spaced">
+      <div>
+        <p class="eyebrow">05 / FIELD NOTES</p>
+        <h2>Weather-aware reminders</h2>
+      </div>
+      <p class="section-caption">
+        Rule-based guidance · check official alerts
+      </p>
+    </section>
+    <section id="advisories" class="advisory-grid">
+      <article class="advisory-card">
+        Preparing field reminders…
+      </article>
+    </section>
+    <!-- =========================
+         OFFICIAL WEATHER SOURCES
+    ========================== -->
+    <section class="official-panel">
+      <div class="official-mark">IMD</div>
+      <div>
+        <p class="eyebrow">OFFICIAL REFERENCE</p>
+        <h2>Before making field decisions</h2>
+        <p>
+          This dashboard does not yet ingest a verified live IMD
+          station feed for Annamalai Nagar. Check official forecasts
+          and warnings for Cuddalore and coastal Tamil Nadu.
+        </p>
+        <div class="official-links">
+          <a
+            href="https://mausam.imd.gov.in/"
+            target="_blank"
+            rel="noopener noreferrer">
+            IMD Mausam ↗
+          </a>
+          <a
+            href="https://mausam.imd.gov.in/responsive/wxRealized.php"
+            target="_blank"
+            rel="noopener noreferrer">
+            IMD realized weather ↗
+          </a>
+          <a
+            href="https://beta-tnsmart.rimes.int/index.php/MIS/Rainfall/raingauge_stations/"
+            target="_blank"
+            rel="noopener noreferrer">
+            TN-SMART rain gauges ↗
+          </a>
+        </div>
+        <p id="imd-status" class="fine-print">
+          Official warning feed is not integrated.
+        </p>
+      </div>
+    </section>
+    <!-- =========================
+         QR CODE / SHARING
+    ========================== -->
+    <section class="share-panel">
+      <div>
+        <p class="eyebrow">SHARE WITH YOUR COMMUNITY</p>
+        <h2>Weather intelligence for Annamalai Nagar.</h2>
+        <p>
+          Scan to open this dashboard on another device.
+        </p>
+        <small id="qr-message">
+          Preparing QR code…
+        </small>
+      </div>
+      <div
+        id="qrcode"
+        class="qr-output"
+        aria-label="QR code linking to this weather dashboard">
+      </div>
+    </section>
+    <!-- =========================
+         FOOTER
+    ========================== -->
+    <footer class="footer">
+      <div class="footer-brand">
+        AU <span>DEPARTMENT OF AGRONOMY</span>
+      </div>
+      <p>
+        Annamalai University · Annamalai Nagar,
+        Chidambaram, Tamil Nadu, India
+      </p>
+      <p>
+        Weather data:
+        <a
+          href="https://open-meteo.com/"
+          target="_blank"
+          rel="noopener noreferrer">
+          Open-Meteo
+        </a>
+        · Website hosted with GitHub Pages
+      </p>
+      <p class="fine-print">
+        Data availability and accuracy vary by model and update cycle.
+        Refreshing this page does not force the underlying weather model
+        to update. This dashboard is not a substitute for official
+        warnings or field observations.
+      </p>
+    </footer>
   </main>
 </body>
 </html>
