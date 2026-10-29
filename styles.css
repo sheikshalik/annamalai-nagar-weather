@@ -247,3 +247,35 @@ h1 em{background:linear-gradient(90deg,#fff0b8 0%,#ffe18d 35%,#d1ffd9 80%);-webk
   .campus-photo figcaption{left:8px;right:7px;bottom:8px;font-size:.62rem}
   .campus-photo figcaption span{width:19px;height:19px;margin-right:4px}
 }
+
+
+/* V4 — immersive cinematic campus photography backgrounds; weather logic untouched */
+:root{--gold:#ffd77e;--mint:#b8ffd5;--cyan:#a6f3e6;--line:rgba(255,237,195,.20);--shadow:0 28px 80px rgba(0,0,0,.36)}
+html{scroll-behavior:smooth}
+body{background:#07180f;isolation:isolate}
+body:after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(120deg,rgba(4,22,14,.82),rgba(6,23,18,.91)),url('images/university-admin-building.jpeg') center/cover no-repeat;opacity:.68}
+.topbar{background:linear-gradient(100deg,rgba(3,19,12,.94),rgba(14,42,26,.83));backdrop-filter:blur(22px);border-bottom:1px solid rgba(255,215,126,.27)}
+.brand b{color:#fff5dc}.brand small{color:#c1d6c4}.brand-icon{color:#ffdb88;border-color:rgba(255,215,126,.72);box-shadow:0 0 28px rgba(255,201,85,.08)}
+.wrap{position:relative}
+.hero{min-height:510px;margin-bottom:28px;background:linear-gradient(90deg,rgba(2,20,12,.94) 0%,rgba(4,30,17,.78) 37%,rgba(11,37,17,.26) 72%,rgba(5,21,13,.12) 100%),linear-gradient(0deg,rgba(3,16,10,.72),transparent 60%),url('images/sunflower-research-farm.jpeg') center 52%/cover no-repeat;border:1px solid rgba(255,222,146,.44);box-shadow:0 35px 100px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.05)}
+.hero:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 78% 24%,rgba(255,216,126,.19),transparent 27%),linear-gradient(135deg,rgba(38,118,64,.12),transparent 48%);mix-blend-mode:screen}
+.hero-content{max-width:900px;padding:62px 58px 42px}.hero h1{max-width:850px;font-size:clamp(2.8rem,5.7vw,5rem);line-height:1.02}.hero h1 em{background:linear-gradient(90deg,#fff4c4 0%,#ffdb7e 34%,#baffd3 70%,#a4e8ff 100%);-webkit-background-clip:text;background-clip:text}.hero-sub{font-size:1.08rem;max-width:580px}.kicker{color:#b8ffdb}.hero-time{padding:11px 13px;border:1px solid rgba(255,255,255,.14);background:rgba(3,18,10,.32);border-radius:12px;backdrop-filter:blur(10px)}.hero-time strong{font-size:.8rem}.refresh-btn{background:linear-gradient(110deg,#11865b,#bb862d);border-color:rgba(255,234,174,.7);box-shadow:0 10px 32px rgba(5,14,7,.28)}
+/* The five university photographs are woven into the dashboard, not shown as a gallery. */
+#weather-overview{position:relative;isolation:isolate;padding:15px;border-radius:27px;background:linear-gradient(110deg,rgba(4,25,16,.75),rgba(6,22,17,.54)),url('images/agronomy-entrance.jpeg') center 43%/cover no-repeat;border:1px solid rgba(216,255,225,.15);box-shadow:0 22px 60px rgba(0,0,0,.18)}
+#weather-overview:before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(135deg,rgba(8,87,52,.24),rgba(6,20,15,.35))}
+.current-card{background:linear-gradient(125deg,rgba(5,78,49,.91),rgba(10,42,34,.87) 55%,rgba(28,56,31,.82)),url('images/agronomy-building.jpeg') center/cover no-repeat;border-color:rgba(191,255,208,.27)}
+.metric-card{background-color:rgba(5,24,20,.88);background-image:linear-gradient(145deg,rgba(8,39,28,.87),rgba(6,22,20,.92));border-color:rgba(224,243,194,.2)}
+.tint-cyan{background-image:linear-gradient(145deg,rgba(9,82,76,.91),rgba(5,27,25,.94))}.tint-blue{background-image:linear-gradient(145deg,rgba(15,62,103,.9),rgba(7,25,43,.94))}.tint-violet{background-image:linear-gradient(145deg,rgba(72,43,100,.87),rgba(23,19,44,.94))}.tint-gold{background-image:linear-gradient(145deg,rgba(100,72,24,.85),rgba(35,27,12,.94))}.tint-orange{background-image:linear-gradient(145deg,rgba(116,56,20,.86),rgba(39,21,13,.94))}.tint-green{background-image:linear-gradient(145deg,rgba(30,88,45,.88),rgba(10,29,19,.94))}
+#rain-outlook{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(115deg,rgba(3,27,20,.93),rgba(6,32,37,.84)),url('images/sunflower-research-farm.jpeg') center 57%/cover no-repeat;border-color:rgba(255,218,126,.24);box-shadow:0 22px 60px rgba(0,0,0,.25)}
+#agro-meteorology{position:relative;isolation:isolate;padding:14px;border-radius:26px;background:linear-gradient(110deg,rgba(5,28,17,.79),rgba(5,24,15,.76)),url('images/agronomy-building.jpeg') center 48%/cover no-repeat;border:1px solid rgba(255,221,148,.17)}
+.agro-card{background:linear-gradient(125deg,rgba(7,40,25,.9),rgba(8,25,22,.94));border-color:rgba(226,242,203,.2)}.agro-et{background:linear-gradient(125deg,rgba(10,78,47,.92),rgba(7,31,22,.94))}.agro-vpd{background:linear-gradient(125deg,rgba(12,72,91,.9),rgba(8,28,32,.94))}.agro-rad{background:linear-gradient(125deg,rgba(123,79,20,.89),rgba(42,29,15,.94))}.agro-soil{background:linear-gradient(125deg,rgba(51,78,31,.91),rgba(18,35,19,.95))}
+#official-weather{background:linear-gradient(110deg,rgba(3,18,15,.91),rgba(5,26,29,.87)),url('images/university-arch-night.jpeg') center 49%/cover no-repeat;border-color:rgba(255,211,125,.3);box-shadow:0 24px 65px rgba(0,0,0,.27)}
+#share-dashboard{background:linear-gradient(105deg,rgba(5,33,19,.90),rgba(38,35,18,.79)),url('images/university-admin-building.jpeg') center 55%/cover no-repeat;border-color:rgba(255,216,126,.27)}
+.source-note{background:linear-gradient(105deg,rgba(11,73,43,.87),rgba(22,51,34,.85)),url('images/agronomy-entrance.jpeg') center 48%/cover no-repeat;border-color:rgba(198,255,211,.24)}
+.section-head h2{color:#fff9e9}.section-head h2 span{color:#b9dfc5}.eyebrow{color:#c1f6d1}.section-caption{color:#c2d5c6}
+.forecast-card{background:linear-gradient(155deg,rgba(15,53,37,.94),rgba(5,25,19,.96));border-color:rgba(215,241,200,.17)}
+.advisory-card{background:linear-gradient(145deg,rgba(15,52,34,.94),rgba(5,24,18,.96));border-left-color:#68e3aa}.advisory-card:nth-child(2n){border-left-color:#ffd27a}
+.footer{position:relative;margin-top:28px;padding-top:30px}.footer:before{content:"";display:block;height:110px;margin:0 auto 20px;max-width:900px;border-radius:18px;background:linear-gradient(0deg,rgba(4,20,12,.42),rgba(4,20,12,.1)),url('images/university-arch-night.jpeg') center 53%/cover no-repeat;box-shadow:0 12px 35px rgba(0,0,0,.22)}
+@media(max-width:1000px){.hero-content{padding:48px 38px 35px}}
+@media(max-width:640px){.hero{min-height:560px;background-position:61% center}.hero-content{padding:32px 20px 82px}.hero h1{font-size:clamp(2.35rem,10vw,3.25rem);line-height:1.03}.hero-time{padding:9px 10px}#weather-overview{padding:8px;border-radius:21px}#agro-meteorology{padding:8px;border-radius:21px}#rain-outlook{background-position:61% center}.current-card{background-position:57% center}.source-note{background-position:45% center}.footer:before{height:90px;margin-bottom:16px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
