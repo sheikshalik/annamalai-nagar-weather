@@ -279,3 +279,5 @@ body:after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;back
 @media(max-width:1000px){.hero-content{padding:48px 38px 35px}}
 @media(max-width:640px){.hero{min-height:560px;background-position:61% center}.hero-content{padding:32px 20px 82px}.hero h1{font-size:clamp(2.35rem,10vw,3.25rem);line-height:1.03}.hero-time{padding:9px 10px}#weather-overview{padding:8px;border-radius:21px}#agro-meteorology{padding:8px;border-radius:21px}#rain-outlook{background-position:61% center}.current-card{background-position:57% center}.source-note{background-position:45% center}.footer:before{height:90px;margin-bottom:16px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Small, understated developer credit */
+.developer-credit{margin:10px 0 0;color:rgba(225,211,171,.72);font-size:.62rem;letter-spacing:.035em;text-align:center}
