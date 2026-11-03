@@ -1,3 +1,4 @@
+
 (() => {
   'use strict';
 
@@ -5,6 +6,7 @@
   const $=id=>document.getElementById(id);
   const fmt=(v,d=1)=>v===null||v===undefined||v===''||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
   const num=v=>v===null||v===undefined||!Number.isFinite(Number(v))?NaN:Number(v);
+
   const dateTime=v=>{
     if(!v)return 'Unavailable';
     let d;
@@ -12,7 +14,9 @@
     else d=new Date(v);
     return Number.isNaN(d.getTime())?String(v):new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short',timeZone:TZ}).format(d)+' IST';
   };
+
   const dateLabel=v=>new Intl.DateTimeFormat('en-IN',{weekday:'short',day:'numeric',timeZone:TZ}).format(new Date(v+'T12:00:00+05:30'));
+
   const wx=code=>{
     if(code===0)return['☀️','Clear sky'];
     if([1,2].includes(code))return['🌤️','Mainly clear / partly cloudy'];
@@ -24,6 +28,7 @@
     if([95,96,99].includes(code))return['⛈️','Thunderstorm'];
     return['🌡️','Weather conditions'];
   };
+
   const windDir=d=>{
     if(!Number.isFinite(Number(d)))return'Direction —';
     const a=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -33,9 +38,11 @@
   async function fetchJson(url){
     const delays=[700,1500];
     let lastError;
+
     for(let attempt=0;attempt<3;attempt++){
       const ctl=new AbortController();
       const timer=setTimeout(()=>ctl.abort(),12000);
+
       try{
         const r=await fetch(url,{signal:ctl.signal,cache:'no-store'});
         if(!r.ok)throw Error('HTTP '+r.status);
@@ -49,6 +56,7 @@
         clearTimeout(timer);
       }
     }
+
     throw lastError||Error('Weather request failed');
   }
 
@@ -69,6 +77,7 @@
   function status(t,ok=true){
     $('load-status').textContent=t;
     const dot=document.querySelector('.live-state i');
+
     if(dot){
       dot.style.background=ok?'#70f0b4':'#ffd27a';
       dot.style.boxShadow=ok?'0 0 14px #70f0b4':'0 0 12px #ffd27a';
@@ -79,6 +88,7 @@
     const times=hours.time||[];
     let idx=times.indexOf(currentTime);
     if(idx>=0)return idx;
+
     const target=new Date(currentTime+':00+05:30').getTime();
     idx=times.findIndex(t=>new Date(t+':00+05:30').getTime()>=target);
     return idx<0?0:idx;
@@ -87,13 +97,16 @@
   function vals(obj,key,start,count){
     return (obj[key]||[]).slice(start,start+count).map(num);
   }
+
   function sum(obj,key,start,count){
     return vals(obj,key,start,count).filter(Number.isFinite).reduce((a,v)=>a+v,0);
   }
+
   function max(obj,key,start,count){
     const a=vals(obj,key,start,count).filter(Number.isFinite);
     return a.length?Math.max(...a):NaN;
   }
+
   function past24(hours,currentTime){
     const ix=(hours.time||[]).findIndex(t=>t===currentTime);
     const end=ix>=0?ix:(hours.time||[]).findIndex(t=>t>=currentTime);
@@ -106,8 +119,10 @@
   function renderForecast(data,today){
     const d=data.daily;
     const days=d.time.map((day,i)=>({day,i})).filter(x=>x.day>=today).slice(0,7);
+
     $('forecast-grid').innerHTML=days.map(({day,i},n)=>{
       const [icon,desc]=wx(d.weather_code[i]);
+
       return `<article class="forecast-card">
         <div class="forecast-day">${n===0?'TODAY':dateLabel(day).toUpperCase()}</div>
         <div class="forecast-icon" title="${desc}">${icon}</div>
@@ -121,13 +136,17 @@
   function renderRain(data,start,prev,today){
     const h=data.hourly,d=data.daily;
     const days=d.time.map((day,i)=>({day,i})).filter(x=>x.day>=today).slice(0,7);
+
     $('rain-past-24').textContent=prev.count>=20?fmt(prev.total,1):'—';
     $('rain-7').textContent=fmt(days.reduce((a,x)=>a+(Number(d.precipitation_sum[x.i])||0),0),1);
     $('rain-chance').textContent=fmt(max(h,'precipitation_probability',start,24),0);
     $('rain-next-24').textContent=fmt(sum(h,'precipitation',start,24),1);
+
     const mx=Math.max(1,...days.map(x=>Number(d.precipitation_sum[x.i])||0));
+
     $('rain-chart').innerHTML=days.map(({day,i})=>{
       const mm=Number(d.precipitation_sum[i])||0;
+
       return `<div class="rain-day">
         <span class="rain-value">${fmt(mm,1)}</span>
         <div class="rain-bar-wrap"><div class="rain-bar" style="height:${Math.max(mm>0?4:2,mm/mx*88)}px"></div></div>
@@ -139,6 +158,7 @@
   function renderAgro(data,start){
     const h=data.hourly;
     const set=(id,v,d=1)=>$(id).textContent=fmt(v,d);
+
     set('et0',h.et0_fao_evapotranspiration?.[start]);
     set('vpd',h.vapour_pressure_deficit?.[start],2);
     set('solar',h.shortwave_radiation?.[start],0);
@@ -146,8 +166,79 @@
     set('soil-moisture',h.soil_moisture_0_to_7cm?.[start],3);
   }
 
-  function renderAdvisories(c,data,start){
+  // Official alert feed.
+  // Expected file: data/official-alerts.json
+  //
+  // Example format:
+  // {
+  //   "status":"ok",
+  //   "district":"Cuddalore",
+  //   "source":"IMD / authorised government source",
+  //   "updatedAt":"2026-11-03T08:30:00+05:30",
+  //   "alerts":[
+  //     {
+  //       "severity":"yellow",
+  //       "title":"Heavy rainfall warning",
+  //       "description":"Official warning details",
+  //       "issuedAt":"2026-11-03T08:00:00+05:30",
+  //       "validUntil":"2026-11-04T08:00:00+05:30",
+  //       "areas":["Cuddalore"],
+  //       "sourceUrl":"https://official-source.gov.in/"
+  //     }
+  //   ]
+  // }
+
+  async function fetchOfficialAlerts(){
+    const url='./data/official-alerts.json?ts='+Date.now();
+
+    try{
+      const ctl=new AbortController();
+      const timer=setTimeout(()=>ctl.abort(),8000);
+
+      try{
+        const response=await fetch(url,{signal:ctl.signal,cache:'no-store'});
+        if(!response.ok)throw Error('HTTP '+response.status);
+
+        const feed=await response.json();
+
+        if(feed.status!=='ok'||!Array.isArray(feed.alerts)){
+          throw Error('Official alert feed has an unsupported format');
+        }
+
+        return feed;
+      }finally{
+        clearTimeout(timer);
+      }
+    }catch(error){
+      console.info('Official alert feed is not available:',error.message);
+      return null;
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[ch]));
+  }
+
+  function alertSeverity(value){
+    const s=String(value||'').toLowerCase();
+
+    if(s==='red')return{label:'RED ALERT',icon:'🚨'};
+    if(s==='orange')return{label:'ORANGE ALERT',icon:'⚠️'};
+    if(s==='yellow')return{label:'YELLOW ALERT',icon:'⚠️'};
+    if(s==='green')return{label:'GREEN',icon:'🟢'};
+
+    return{label:'OFFICIAL UPDATE',icon:'📣'};
+  }
+
+  function renderAdvisories(c,data,start,officialFeed){
     const h=data.hourly;
+
     const rain6=sum(h,'precipitation',start,6);
     const chance6=max(h,'precipitation_probability',start,6);
     const rain24=sum(h,'precipitation',start,24);
@@ -155,33 +246,110 @@
     const wind6=max(h,'wind_speed_10m',start,6);
     const gust6=max(h,'wind_gusts_10m',start,6);
     const temp24=max(h,'temperature_2m',start,24);
+
     const items=[];
 
-    if(rain6>=5||chance6>=70){
-      items.push(['🌧️','Rain watch · next 6 hours',`Forecast precipitation is about ${fmt(rain6,1)} mm, with a maximum hourly rain probability of ${fmt(chance6,0)}%. Check drainage and official warnings; avoid field applications if runoff risk is present.`]);
+    // Official government information is kept separate from model guidance.
+    if(officialFeed){
+      const active=(officialFeed.alerts||[]).filter(a=>a&&a.title);
+      const district=escapeHtml(officialFeed.district||'Cuddalore district');
+      const source=escapeHtml(officialFeed.source||'Official source');
+
+      const updated=officialFeed.updatedAt
+        ?`Feed updated: ${escapeHtml(dateTime(officialFeed.updatedAt))}. `
+        :'';
+
+      if(active.length){
+        const a=active[0];
+        const sev=alertSeverity(a.severity);
+
+        const valid=a.validUntil
+          ?` Valid until: ${escapeHtml(dateTime(a.validUntil))}.`
+          :'';
+
+        const issued=a.issuedAt
+          ?` Issued: ${escapeHtml(dateTime(a.issuedAt))}. `
+          :'';
+
+        const areas=Array.isArray(a.areas)&&a.areas.length
+          ?` Areas: ${escapeHtml(a.areas.join(', '))}.`
+          :'';
+
+        const link=a.sourceUrl&&/^https:\/\//i.test(a.sourceUrl)
+          ?` <a href="${escapeHtml(a.sourceUrl)}" target="_blank" rel="noopener noreferrer">View official bulletin</a>`
+          :'';
+
+        items.push([
+          sev.icon,
+          `${sev.label} · ${escapeHtml(a.title)}`,
+          `${escapeHtml(a.description||'Please read the official bulletin and follow district administration instructions.')} ${issued}${updated}${valid}${areas} Source: ${source}, ${district}.${link}`
+        ]);
+      }else{
+        items.push([
+          '✅',
+          'Official alerts · no active bulletin listed',
+          `${district}: the connected official feed was checked and currently lists no active alerts. Feed updated: ${escapeHtml(dateTime(officialFeed.updatedAt))}. Source: ${source}.`
+        ]);
+      }
     }else{
-      items.push(['🌦️','Rain outlook · next 24 hours',`The model forecasts ${fmt(rain24,1)} mm over 24 hours; maximum hourly probability is ${fmt(chance24,0)}%. This is a forecast, not a guarantee.`]);
+      items.push([
+        '📣',
+        'Official alerts · feed not connected',
+        'Live IMD/district warning data has not been received by this dashboard. This is not confirmation that no warning exists. Check the official IMD and Tamil Nadu government links in the reference section before weather-sensitive field operations.'
+      ]);
+    }
+
+    if(rain6>=5||chance6>=70){
+      items.push([
+        '🌧️',
+        'Rain watch · next 6 hours',
+        `The weather model forecasts about ${fmt(rain6,1)} mm of precipitation, with a maximum hourly rain probability of ${fmt(chance6,0)}%. Inspect field drains and low-lying plots; postpone spraying or fertilizer application where rain or runoff may cause losses.`
+      ]);
+    }else{
+      items.push([
+        '🌦️',
+        'Rain outlook · next 24 hours',
+        `The model forecasts ${fmt(rain24,1)} mm over 24 hours; maximum hourly rain probability is ${fmt(chance24,0)}%. Use this as planning guidance, not a guarantee, and verify local field conditions.`
+      ]);
     }
 
     if((Number.isFinite(gust6)&&gust6>=25)||(Number.isFinite(wind6)&&wind6>=20)){
-      items.push(['💨','Wind-aware field operations',`Forecast wind may reach ${fmt(wind6,0)} km/h, with gusts up to ${fmt(gust6,0)} km/h. Check field-level wind, drift risk and product-label limits before spraying.`]);
+      items.push([
+        '💨',
+        'Wind-aware field operations',
+        `Forecast wind may reach ${fmt(wind6,0)} km/h, with gusts up to ${fmt(gust6,0)} km/h. Avoid drift-prone spraying and postpone drone operations when wind exceeds the aircraft or product-label limits.`
+      ]);
     }else{
-      items.push(['🧪','Spraying · verify conditions',`The next 6-hour model outlook shows wind up to ${fmt(wind6,0)} km/h and gusts up to ${fmt(gust6,0)} km/h. Confirm field conditions and follow the pesticide label before spraying.`]);
+      items.push([
+        '🧪',
+        'Spraying · check field conditions',
+        `The next 6-hour model outlook shows wind up to ${fmt(wind6,0)} km/h and gusts up to ${fmt(gust6,0)} km/h. Check wind at crop height, rain outlook and pesticide-label restrictions before spraying.`
+      ]);
     }
 
     if(Number.isFinite(temp24)&&temp24>=35){
-      items.push(['☀️','Heat and outdoor work',`Forecast temperature may reach ${fmt(temp24,0)}°C in the next 24 hours. Schedule strenuous work for cooler hours and follow heat-safety guidance.`]);
+      items.push([
+        '☀️',
+        'Heat and outdoor work',
+        `Forecast temperature may reach ${fmt(temp24,0)}°C in the next 24 hours. Schedule strenuous field work for cooler hours, provide drinking water and follow local heat-safety guidance.`
+      ]);
     }else{
-      items.push(['💧','Irrigation · inspect the field','Use observed soil moisture, crop stage, field water depth and local rainfall to decide irrigation. Modelled ET₀ is not actual crop water use.']);
+      items.push([
+        '💧',
+        'Irrigation · inspect the field',
+        'Decide irrigation using crop stage, soil moisture, field water depth and recent rainfall. Do not treat modelled ET₀ as actual crop water use; check the field before operating pumps.'
+      ]);
     }
 
-    items.push(['📣','Official warnings · check IMD','This dashboard does not ingest live IMD warnings. Check official Cuddalore/coastal Tamil Nadu alerts before weather-sensitive field operations.']);
-    $('advisories').innerHTML=items.map(([icon,title,body])=>`<article class="advisory-card"><span class="advisory-icon">${icon}</span><div><h3>${title}</h3><p>${body}</p></div></article>`).join('');
+    $('advisories').innerHTML=items.map(([icon,title,body])=>
+      `<article class="advisory-card"><span class="advisory-icon">${icon}</span><div><h3>${title}</h3><p>${body}</p></div></article>`
+    ).join('');
   }
 
   // Convert weather descriptions from the backup service into WMO-style codes.
   function wttrCode(desc){
     const s=String(desc||'').toLowerCase();
+
     if(s.includes('thunder'))return 95;
     if(s.includes('snow')||s.includes('sleet')||s.includes('ice'))return 71;
     if(s.includes('fog')||s.includes('mist'))return 45;
@@ -190,6 +358,7 @@
     if(s.includes('overcast'))return 3;
     if(s.includes('cloud'))return 2;
     if(s.includes('sun')||s.includes('clear'))return 0;
+
     return 1;
   }
 
@@ -202,31 +371,59 @@
     const cc=raw.current_condition[0];
     const days=raw.weather;
     const now=new Date();
+
     const localNow=new Intl.DateTimeFormat('en-CA',{
-      timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
+      timeZone:TZ,
+      year:'numeric',
+      month:'2-digit',
+      day:'2-digit'
     }).format(now);
+
     const hourNow=Number(new Intl.DateTimeFormat('en-GB',{
-      timeZone:TZ,hour:'2-digit',hourCycle:'h23'
+      timeZone:TZ,
+      hour:'2-digit',
+      hourCycle:'h23'
     }).format(now));
+
     const currentTime=`${localNow}T${String(hourNow).padStart(2,'0')}:00`;
     const currentDesc=cc.weatherDesc?.[0]?.value||'Weather conditions';
     const currentCode=wttrCode(currentDesc);
 
     const hourly={
-      time:[],temperature_2m:[],apparent_temperature:[],
-      relative_humidity_2m:[],dew_point_2m:[],wet_bulb_temperature_2m:[],
-      wind_speed_10m:[],wind_gusts_10m:[],wind_direction_10m:[],
-      pressure_msl:[],uv_index:[],cloud_cover:[],precipitation:[],
-      precipitation_probability:[],weather_code:[],
-      et0_fao_evapotranspiration:[],vapour_pressure_deficit:[],
-      shortwave_radiation:[],soil_temperature_0_to_7cm:[],
+      time:[],
+      temperature_2m:[],
+      apparent_temperature:[],
+      relative_humidity_2m:[],
+      dew_point_2m:[],
+      wet_bulb_temperature_2m:[],
+      wind_speed_10m:[],
+      wind_gusts_10m:[],
+      wind_direction_10m:[],
+      pressure_msl:[],
+      uv_index:[],
+      cloud_cover:[],
+      precipitation:[],
+      precipitation_probability:[],
+      weather_code:[],
+      et0_fao_evapotranspiration:[],
+      vapour_pressure_deficit:[],
+      shortwave_radiation:[],
+      soil_temperature_0_to_7cm:[],
       soil_moisture_0_to_7cm:[]
     };
 
     const daily={
-      time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],
-      precipitation_sum:[],precipitation_probability_max:[],uv_index_max:[],
-      sunrise:[],sunset:[],wind_speed_10m_max:[],wind_gusts_10m_max:[],
+      time:[],
+      weather_code:[],
+      temperature_2m_max:[],
+      temperature_2m_min:[],
+      precipitation_sum:[],
+      precipitation_probability_max:[],
+      uv_index_max:[],
+      sunrise:[],
+      sunset:[],
+      wind_speed_10m_max:[],
+      wind_gusts_10m_max:[],
       sunshine_duration:[]
     };
 
@@ -254,6 +451,7 @@
 
       hrs.forEach((x,i)=>{
         const baseHour=Math.floor(Number(x.time||0)/100);
+
         for(let k=0;k<3;k++){
           const hour=(baseHour+k)%24;
           const iso=`${date}T${String(hour).padStart(2,'0')}:00`;
@@ -280,6 +478,7 @@
             soil_temperature_0_to_7cm:NaN,
             soil_moisture_0_to_7cm:NaN
           };
+
           keys.forEach(key=>hourly[key].push(map[key]??NaN));
         }
       });
@@ -305,6 +504,7 @@
 
     if(!hourly.time.includes(currentTime)){
       hourly.time.unshift(currentTime);
+
       keys.forEach(key=>{
         const value={
           temperature_2m:current.temperature_2m,
@@ -318,6 +518,7 @@
           weather_code:current.weather_code,
           precipitation:current.precipitation
         };
+
         hourly[key].unshift(Object.prototype.hasOwnProperty.call(value,key)?value[key]:NaN);
       });
     }
@@ -332,11 +533,16 @@
   async function fetchWeatherWithFallback(primaryUrl){
     try{
       const data=await fetchJson(primaryUrl);
-      if(!data.current||!data.hourly||!data.daily)throw Error('Primary provider returned incomplete data');
+
+      if(!data.current||!data.hourly||!data.daily){
+        throw Error('Primary provider returned incomplete data');
+      }
+
       return {data,provider:'Open-Meteo'};
     }catch(primaryError){
       console.warn('Open-Meteo unavailable; trying backup provider.',primaryError);
       const backup=await fetchJson('https://wttr.in/Annamalai%20Nagar?format=j1');
+
       return {data:normalizeWttr(backup),provider:'wttr.in (backup)'};
     }
   }
@@ -354,9 +560,14 @@
 
     try{
       const p=new URLSearchParams({
-        latitude:LAT,longitude:LON,timezone:TZ,
-        past_days:'2',forecast_days:'7',
-        wind_speed_unit:'kmh',precipitation_unit:'mm',temperature_unit:'celsius',
+        latitude:LAT,
+        longitude:LON,
+        timezone:TZ,
+        past_days:'2',
+        forecast_days:'7',
+        wind_speed_unit:'kmh',
+        precipitation_unit:'mm',
+        temperature_unit:'celsius',
         current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,dew_point_2m,wet_bulb_temperature_2m,uv_index',
         hourly:'temperature_2m,precipitation,precipitation_probability,relative_humidity_2m,dew_point_2m,wet_bulb_temperature_2m,wind_speed_10m,wind_gusts_10m,uv_index,et0_fao_evapotranspiration,vapour_pressure_deficit,shortwave_radiation,soil_temperature_0_to_7cm,soil_moisture_0_to_7cm',
         daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,wind_speed_10m_max,wind_gusts_10m_max,sunshine_duration'
@@ -369,15 +580,23 @@
         data=result.data;
         provider=result.provider;
         saveWeatherCache(data);
-        try{localStorage.setItem('annamalai-weather-provider-v1',provider)}catch(_){}
+
+        try{
+          localStorage.setItem('annamalai-weather-provider-v1',provider);
+        }catch(_){}
       }catch(networkError){
         cachedRecord=readWeatherCache();
+
         if(!cachedRecord)throw networkError;
+
         data=cachedRecord.data;
         fromCache=true;
+
         try{
           provider=localStorage.getItem('annamalai-weather-provider-v1')||'previously saved provider';
-        }catch(_){provider='previously saved provider'}
+        }catch(_){
+          provider='previously saved provider';
+        }
       }
 
       const c=data.current,h=data.hourly,d=data.daily;
@@ -411,10 +630,13 @@
       $('updated-at').textContent=dateTime(fetched.toISOString());
 
       $('freshness').textContent=fromCache?'SAVED DATA · last successful update':'Fetched just now';
+
       renderForecast(data,today);
       renderRain(data,start,prev,today);
       renderAgro(data,start);
-      renderAdvisories(c,data,start);
+
+      const officialFeed=await fetchOfficialAlerts();
+      renderAdvisories(c,data,start,officialFeed);
 
       $('imd-status').textContent=`Weather estimates supplied by ${provider}. Live IMD station observations/warnings are not integrated; check official links above.`;
 
@@ -432,6 +654,7 @@
       status('Weather connection unavailable',false);
       $('freshness').textContent='No new update · previous display retained';
       $('imd-status').textContent='A fresh update could not be retrieved after automatic retries. Previously displayed values have been retained with their original timestamp. Check your connection and try Refresh now.';
+
       if(!$('temperature').textContent||$('temperature').textContent==='—'){
         $('weather-description').textContent='Weather data temporarily unavailable';
       }
@@ -445,23 +668,38 @@
   function makeQr(){
     const host=$('qrcode');
     if(!host)return;
+
     const target='https://sheikshalik.github.io/annamalai-nagar-weather/';
+
     if(typeof QRCode==='undefined'){
       $('qr-message').textContent='QR service did not load. The dashboard address is fixed in the QR generator.';
       return;
     }
+
     host.innerHTML='';
+
     new QRCode(host,{
-      text:target,width:120,height:120,
-      colorDark:'#081a2b',colorLight:'#ffffff',
+      text:target,
+      width:120,
+      height:120,
+      colorDark:'#081a2b',
+      colorLight:'#ffffff',
       correctLevel:QRCode.CorrectLevel.H
     });
+
     $('qr-message').textContent='Scan to open the live dashboard.';
   }
 
   $('refresh-btn').addEventListener('click',loadWeather);
   loadWeather();
   makeQr();
-  setInterval(()=>{if(!document.hidden)loadWeather()},10*60*1000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadWeather()});
+
+  setInterval(()=>{
+    if(!document.hidden)loadWeather();
+  },10*60*1000);
+
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden)loadWeather();
+  });
+
 })();
