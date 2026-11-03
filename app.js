@@ -168,7 +168,7 @@
 
   // Official alert feed.
   // Expected file: data/official-alerts.json
-  //
+
   // Example format:
   // {
   //   "status":"ok",
@@ -236,6 +236,7 @@
     return{label:'OFFICIAL UPDATE',icon:'📣'};
   }
 
+  // UPDATED WEATHER-AWARE REMINDERS
   function renderAdvisories(c,data,start,officialFeed){
     const h=data.hourly;
 
@@ -249,95 +250,92 @@
 
     const items=[];
 
-    // Official government information is kept separate from model guidance.
+    // 1. Verified official government alerts.
     if(officialFeed){
       const active=(officialFeed.alerts||[]).filter(a=>a&&a.title);
       const district=escapeHtml(officialFeed.district||'Cuddalore district');
       const source=escapeHtml(officialFeed.source||'Official source');
 
-      const updated=officialFeed.updatedAt
-        ?`Feed updated: ${escapeHtml(dateTime(officialFeed.updatedAt))}. `
-        :'';
-
       if(active.length){
         const a=active[0];
         const sev=alertSeverity(a.severity);
+
+        const issued=a.issuedAt
+          ?` Issued: ${escapeHtml(dateTime(a.issuedAt))}.`
+          :'';
 
         const valid=a.validUntil
           ?` Valid until: ${escapeHtml(dateTime(a.validUntil))}.`
           :'';
 
-        const issued=a.issuedAt
-          ?` Issued: ${escapeHtml(dateTime(a.issuedAt))}. `
-          :'';
-
         const areas=Array.isArray(a.areas)&&a.areas.length
-          ?` Areas: ${escapeHtml(a.areas.join(', '))}.`
+          ?` Affected areas: ${escapeHtml(a.areas.join(', '))}.`
           :'';
 
         const link=a.sourceUrl&&/^https:\/\//i.test(a.sourceUrl)
-          ?` <a href="${escapeHtml(a.sourceUrl)}" target="_blank" rel="noopener noreferrer">View official bulletin</a>`
+          ?` <a href="${escapeHtml(a.sourceUrl)}" target="_blank" rel="noopener noreferrer">View official bulletin ↗</a>`
           :'';
 
         items.push([
           sev.icon,
           `${sev.label} · ${escapeHtml(a.title)}`,
-          `${escapeHtml(a.description||'Please read the official bulletin and follow district administration instructions.')} ${issued}${updated}${valid}${areas} Source: ${source}, ${district}.${link}`
+          `${escapeHtml(a.description||'Please read the official bulletin and follow district administration instructions.')} ${issued}${valid}${areas} District: ${district}. Source: ${source}.${link}`
         ]);
       }else{
         items.push([
           '✅',
-          'Official alerts · no active bulletin listed',
-          `${district}: the connected official feed was checked and currently lists no active alerts. Feed updated: ${escapeHtml(dateTime(officialFeed.updatedAt))}. Source: ${source}.`
+          'Official alerts · feed checked',
+          `${district}: the connected official feed reports no active alerts. Last checked: ${escapeHtml(dateTime(officialFeed.updatedAt))}. Source: ${source}.`
         ]);
       }
     }else{
       items.push([
         '📣',
-        'Official alerts · feed not connected',
-        'Live IMD/district warning data has not been received by this dashboard. This is not confirmation that no warning exists. Check the official IMD and Tamil Nadu government links in the reference section before weather-sensitive field operations.'
+        'Official alerts · verification required',
+        'No verified live government alert feed is connected yet. This does not mean that no warning exists. Check the official IMD and Tamil Nadu government bulletins before weather-sensitive field operations.'
       ]);
     }
 
+    // 2. TNAU district agricultural weather advisory.
+    items.push([
+      '🌾',
+      'TNAU · District agricultural advisory',
+      'Consult the latest Tamil Nadu district-wise Agro-Met Advisory Bulletin for crop-specific recommendations, rainfall outlook and field operations. Check the bulletin issue date, district and forecast validity before applying its advice. <a href="https://agritech.tnau.ac.in/agrometeorologicaladvisory/agro_meteorological_advisory_tnau_district.html" target="_blank" rel="noopener noreferrer">Open TNAU district advisory portal ↗</a>'
+    ]);
+
+    // 3. Rainfall and drainage guidance from the weather model.
     if(rain6>=5||chance6>=70){
       items.push([
         '🌧️',
         'Rain watch · next 6 hours',
-        `The weather model forecasts about ${fmt(rain6,1)} mm of precipitation, with a maximum hourly rain probability of ${fmt(chance6,0)}%. Inspect field drains and low-lying plots; postpone spraying or fertilizer application where rain or runoff may cause losses.`
+        `The weather model forecasts approximately ${fmt(rain6,1)} mm of rainfall over the next 6 hours, with a maximum hourly rain probability of ${fmt(chance6,0)}%. Inspect field drains, outlets and low-lying plots. Avoid spraying or fertilizer application when rainfall may cause runoff or losses.`
       ]);
     }else{
       items.push([
         '🌦️',
         'Rain outlook · next 24 hours',
-        `The model forecasts ${fmt(rain24,1)} mm over 24 hours; maximum hourly rain probability is ${fmt(chance24,0)}%. Use this as planning guidance, not a guarantee, and verify local field conditions.`
+        `The weather model forecasts ${fmt(rain24,1)} mm of rainfall over the next 24 hours, with a maximum hourly probability of ${fmt(chance24,0)}%. Use this forecast for planning and verify actual field conditions.`
       ]);
     }
 
+    // 4. Weather-sensitive farm operations.
     if((Number.isFinite(gust6)&&gust6>=25)||(Number.isFinite(wind6)&&wind6>=20)){
       items.push([
         '💨',
-        'Wind-aware field operations',
-        `Forecast wind may reach ${fmt(wind6,0)} km/h, with gusts up to ${fmt(gust6,0)} km/h. Avoid drift-prone spraying and postpone drone operations when wind exceeds the aircraft or product-label limits.`
+        'Wind · spraying and drone operations',
+        `Forecast wind may reach ${fmt(wind6,0)} km/h, with gusts up to ${fmt(gust6,0)} km/h. Check wind at crop height and follow pesticide-label and drone operating limits. Postpone operations when conditions are unsuitable.`
       ]);
-    }else{
-      items.push([
-        '🧪',
-        'Spraying · check field conditions',
-        `The next 6-hour model outlook shows wind up to ${fmt(wind6,0)} km/h and gusts up to ${fmt(gust6,0)} km/h. Check wind at crop height, rain outlook and pesticide-label restrictions before spraying.`
-      ]);
-    }
-
-    if(Number.isFinite(temp24)&&temp24>=35){
+    }else if(Number.isFinite(temp24)&&temp24>=35){
       items.push([
         '☀️',
-        'Heat and outdoor work',
-        `Forecast temperature may reach ${fmt(temp24,0)}°C in the next 24 hours. Schedule strenuous field work for cooler hours, provide drinking water and follow local heat-safety guidance.`
+        'Heat · protect field workers',
+        `Forecast temperature may reach ${fmt(temp24,0)}°C in the next 24 hours. Schedule strenuous outdoor work during cooler periods, provide drinking water and follow local heat-safety guidance.`
       ]);
     }else{
       items.push([
         '💧',
-        'Irrigation · inspect the field',
-        'Decide irrigation using crop stage, soil moisture, field water depth and recent rainfall. Do not treat modelled ET₀ as actual crop water use; check the field before operating pumps.'
+        'Irrigation · field inspection',
+        'Assess crop stage, soil moisture, field water depth and recent rainfall before irrigation. Avoid unnecessary pumping when adequate water is available. Modelled evapotranspiration is an estimate, not a direct measurement of crop water use.'
       ]);
     }
 
