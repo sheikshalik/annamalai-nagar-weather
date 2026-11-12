@@ -208,6 +208,55 @@
   <article class="forecast-card">Loading forecast…</article>
 </section>
 
+<!-- WINDY WEATHER EXPLORER - NEW SECTION -->
+<section class="section-head section-spaced">
+  <div>
+    <p class="eyebrow">02A / WEATHER EXPLORER</p>
+    <h2>Windy <span>Weather Explorer</span></h2>
+  </div>
+  <p class="section-caption">Interactive weather map · Annamalai Nagar</p>
+</section>
+
+<section
+  id="windy-weather-explorer"
+  aria-label="Windy interactive weather map for Annamalai Nagar"
+  style="width:100%; margin-top:16px; padding:12px; box-sizing:border-box; background:rgba(7,26,43,0.82); border:1px solid rgba(211,174,91,0.35); border-radius:20px; box-shadow:0 12px 35px rgba(0,0,0,0.20);"
+>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:6px 5px 13px;">
+    <div>
+      <strong style="color:#e5c47b; font-size:14px;">WINDY LIVE WEATHER MAP</strong>
+      <div style="color:#a9bdc9; font-size:11px; margin-top:4px;">
+        11.3893° N · 79.7158° E · Annamalai Nagar
+      </div>
+    </div>
+
+    <a
+      href="https://www.windy.com/?rain,11.3893,79.7158,8"
+      target="_blank"
+      rel="noopener noreferrer"
+      style="color:#8ed9e8; font-size:12px; text-decoration:none;"
+    >
+      Open full Windy map ↗
+    </a>
+  </div>
+
+  <div style="position:relative; width:100%; height:520px; overflow:hidden; border-radius:13px; background:#102b40;">
+    <iframe
+      title="Windy weather map for Annamalai Nagar"
+      src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=8&overlay=rain&product=ecmwf&level=surface&lat=11.3893&lon=79.7158&detailLat=11.3893&detailLon=79.7158"
+      style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+      loading="lazy"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen
+    ></iframe>
+  </div>
+
+  <p style="color:#9eb4c1; font-size:11px; line-height:1.6; margin:12px 5px 3px;">
+    Weather visualisation provided by Windy. Forecast rainfall and other weather layers are model-based estimates, not direct rain-gauge observations or official warnings.
+  </p>
+</section>
+<!-- END WINDY WEATHER EXPLORER -->
+
 <section class="section-head section-spaced">
   <div>
     <p class="eyebrow">03 / RAIN WATCH</p>
@@ -376,14 +425,17 @@
     Data availability and accuracy vary by model and update cycle. Refreshing this page does not force the underlying weather model to update. Not a substitute for official warnings or field observations.
   </p>
 
- 
-<p class="developer-credit">
-  Designed &amp; Developed by S. Sheik Shalik (Research Scholar)
-  <br>
-  Dr. M. Meyyappan
-  <br>
-  <span style="font-size:11px;">
-    Associate Professor, Department of Agronomy, Faculty of Agriculture, Annamalai University
-  </span>
-</p>
+  <p class="developer-credit">
+    Designed &amp; Developed by S. Sheik Shalik (Research Scholar)
+    <br>
+    Dr. M. Meyyappan
+    <br>
+    <span style="font-size:11px;">
+      Associate Professor, Department of Agronomy, Faculty of Agriculture, Annamalai University
+    </span>
+  </p>
+</footer>
 
+</main>
+</body>
+</html>
